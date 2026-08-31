@@ -1,0 +1,35 @@
+# ==== Python / Django ====
+backend/.venv/
+**/__pycache__/
+*.pyc
+backend/.env
+backend/db.sqlite3
+backend/media/*
+!backend/media/.gitkeep
+backend/private_media/
+backend/staticfiles/
+
+# ==== أسرار الإنتاج (Production secrets) ====
+.env
+.env.production
+!.env.production.example
+# استثناء: إعداد عنوان API للواجهة في الإنتاج (ليس سرّاً) — يجب تتبّعه للبناء الصحيح
+!frontend/.env.production
+
+# ==== Node / React ====
+frontend/node_modules/
+# ملاحظة: نتتبّع frontend/dist عمداً لأن PythonAnywhere المجاني لا يبني الواجهة،
+# فنرفع نسخة build جاهزة مع المستودع. (لتجاهله محلياً أزِل التعليق عن السطر التالي.)
+# frontend/dist/
+frontend/.env
+npm-debug.log*
+
+# ==== محرر/نظام ====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==== ملفات/مجلدات مؤقتة للنشر (لا تُرفع) ====
+_to_delete/
+*.tar.gz

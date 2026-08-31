@@ -1,0 +1,65 @@
+# ============================================================
+#  جمعية الأشعة — تجميع خدمات الإنتاج (PostgreSQL + Django + Nginx)
+#  التشغيل:  docker compose up -d --build
+#  المتغيّرات تُقرأ من ملف .env في هذا المجلد (انسخه من .env.production.example)
+# ============================================================
+name: csr-platform
+
+services:
+  # ---- قاعدة البيانات ----
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-csr_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?يجب ضبط DB_PASSWORD في ملف .env}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-csr_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- الخلفية (Django + Gunicorn) ----
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # داخل الشبكة: قاعدة البيانات باسم الخدمة db
+      DB_HOST: db
+      DB_PORT: "5432"
+      USE_SQLITE: "False"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media            # وسائط عامة (يقرؤها Nginx)
+      - private_data:/app/private_media   # وثائق حسّاسة (الخلفية فقط)
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # ---- الواجهة (React مبنية + Nginx) ----
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - media_data:/var/www/media:ro     # خدمة الوسائط العامة للقراءة فقط
+
+volumes:
+  pg_data:
+  media_data:
+  private_data:
