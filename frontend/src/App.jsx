@@ -39,6 +39,7 @@ import ManageEditors from "./pages/dashboard/ManageEditors";
 import ManagePatients from "./pages/dashboard/ManagePatients";
 import ManageActivities from "./pages/dashboard/ManageActivities";
 import ManageSiteSettings from "./pages/dashboard/ManageSiteSettings";
+import ManageCategories from "./pages/dashboard/ManageCategories";
 
 const STAFF = ["EDITOR", "ADMIN"];
 const CONTRIB = ["DOCTOR", "EDITOR", "ADMIN"];
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="dashboard/upload" element={<ProtectedRoute roles={CONTRIB}><UploadResource /></ProtectedRoute>} />
         <Route path="dashboard/my-resources" element={<ProtectedRoute roles={CONTRIB}><MyResources /></ProtectedRoute>} />
         <Route path="dashboard/review" element={<ProtectedRoute roles={STAFF}><ReviewContent /></ProtectedRoute>} />
+        <Route path="dashboard/categories" element={<ProtectedRoute roles={STAFF}><ManageCategories /></ProtectedRoute>} />
         <Route path="dashboard/news" element={<ProtectedRoute roles={STAFF}><ManageNews /></ProtectedRoute>} />
         <Route path="dashboard/announcements" element={<ProtectedRoute roles={STAFF}><ManageAnnouncements /></ProtectedRoute>} />
         <Route path="dashboard/accounts" element={<ProtectedRoute roles={STAFF}><ManageAccounts /></ProtectedRoute>} />

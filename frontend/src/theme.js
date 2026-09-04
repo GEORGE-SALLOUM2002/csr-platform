@@ -81,6 +81,9 @@ export function getTheme(mode = "light", dir = "rtl") {
               borderRadius: "inherit",
               transition: "background-color 9999s ease-in-out 0s",
             },
+            // إخفاء أيقونة كشف كلمة المرور المدمجة في المتصفّح (Edge/Chrome على اللابتوب)
+            // حتى تبقى عين واحدة فقط (زرّنا) على اللابتوب والموبايل معاً
+            "& input::-ms-reveal, & input::-ms-clear": { display: "none" },
           },
         },
       },

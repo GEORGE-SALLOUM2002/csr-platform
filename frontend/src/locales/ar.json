@@ -201,7 +201,8 @@
     "active": "مُفعّل",
     "publishAt": "موعد النشر",
     "noAccess": "لا تملك صلاحية الوصول لهذه الصفحة.",
-    "rejectionReason": "سبب الرفض"
+    "rejectionReason": "سبب الرفض",
+    "manageCategories": "إدارة التصنيفات"
   },
   "footer": {
     "rights": "© 2026 جمعية الأشعة. جميع الحقوق محفوظة.",

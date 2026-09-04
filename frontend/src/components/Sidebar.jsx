@@ -27,6 +27,7 @@ import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded
 import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
+import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import { useAuth } from "../context/AuthContext";
 
 // رابط مشترك لكل الأدوار: تغيير كلمة المرور
@@ -55,6 +56,7 @@ const dashboardLinks = {
   EDITOR: [
     { to: "/dashboard/accounts", labelKey: "dashboard.accounts", icon: <HowToRegRoundedIcon /> },
     { to: "/dashboard/review", labelKey: "dashboard.reviewContent", icon: <FactCheckRoundedIcon /> },
+    { to: "/dashboard/categories", labelKey: "dashboard.manageCategories", icon: <CategoryRoundedIcon /> },
     { to: "/dashboard/news", labelKey: "dashboard.manageNews", icon: <EditNoteRoundedIcon /> },
     { to: "/dashboard/announcements", labelKey: "dashboard.manageAnnouncements", icon: <CampaignRoundedIcon /> },
     { to: "/dashboard/patients", labelKey: "dashboard.managePatients", icon: <HealthAndSafetyRoundedIcon /> },
@@ -66,6 +68,7 @@ const dashboardLinks = {
     { to: "/dashboard/members", labelKey: "dashboard.members", icon: <ManageAccountsRoundedIcon /> },
     { to: "/dashboard/editors", labelKey: "dashboard.manageEditors", icon: <SupervisorAccountRoundedIcon /> },
     { to: "/dashboard/review", labelKey: "dashboard.reviewContent", icon: <FactCheckRoundedIcon /> },
+    { to: "/dashboard/categories", labelKey: "dashboard.manageCategories", icon: <CategoryRoundedIcon /> },
     { to: "/dashboard/news", labelKey: "dashboard.manageNews", icon: <EditNoteRoundedIcon /> },
     { to: "/dashboard/announcements", labelKey: "dashboard.manageAnnouncements", icon: <CampaignRoundedIcon /> },
     { to: "/dashboard/patients", labelKey: "dashboard.managePatients", icon: <HealthAndSafetyRoundedIcon /> },

@@ -201,7 +201,8 @@
     "active": "Active",
     "publishAt": "Publish at",
     "noAccess": "You don't have permission to access this page.",
-    "rejectionReason": "Rejection reason"
+    "rejectionReason": "Rejection reason",
+    "manageCategories": "Manage categories"
   },
   "footer": {
     "rights": "© 2026 Radiology Association. All rights reserved.",

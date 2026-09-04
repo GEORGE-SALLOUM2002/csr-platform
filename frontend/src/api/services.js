@@ -28,6 +28,8 @@ export const DoctorsAPI = {
 // ---------------- المكتبة ----------------
 export const LibraryAPI = {
   categories: () => client.get("/categories/"),
+  createCategory: (data) => client.post("/categories/", data),
+  deleteCategory: (id) => client.delete(`/categories/${id}/`),
   resources: (params) => client.get("/resources/", { params }),
   resource: (id) => client.get(`/resources/${id}/`),
   create: (data) => client.post("/resources/", data, form),
