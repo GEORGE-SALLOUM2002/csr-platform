@@ -14,6 +14,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "contact_email", "contact_phone", "address_ar", "address_en", "map_url",
             "facebook", "twitter", "instagram", "youtube", "linkedin", "telegram", "whatsapp",
+            "require_review",
             "updated_at",
         ]
         read_only_fields = ["updated_at"]

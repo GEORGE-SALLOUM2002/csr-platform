@@ -12,13 +12,20 @@ import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 import HealthAndSafetyRoundedIcon from "@mui/icons-material/HealthAndSafetyRounded";
 import MailRoundedIcon from "@mui/icons-material/MailRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import ScanVisual from "../components/ScanVisual";
 import FeaturedBanner from "../components/FeaturedBanner";
+import SocialLinks from "../components/SocialLinks";
 import { ContentAPI, LibraryAPI } from "../api/services";
 import client from "../api/client";
 import { asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
+
+// روابط التواصل الافتراضية للجمعية (تُستخدم إن لم تُضبط من لوحة التحكم)
+const SOCIAL = {
+  facebook: "https://www.facebook.com/csradiologists",
+  instagram: "https://www.instagram.com/p/DcBOwxxFOYq/",
+  email: "Admin@scradiology.com",
+};
 
 const quickCards = [
   { to: "/library", key: "library", icon: <MenuBookRoundedIcon /> },
@@ -34,9 +41,11 @@ export default function Home() {
   const { lang } = useUI();
   const [news, setNews] = useState([]);
   const [stats, setStats] = useState({ doctors: null, resources: null, activities: null });
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
     ContentAPI.news().then((r) => setNews(asList(r.data).slice(0, 4))).catch(() => {});
+    ContentAPI.siteSettings().then((r) => setSettings(r.data)).catch(() => {});
     Promise.all([
       client.get("/doctors/"),
       LibraryAPI.resources(),
@@ -97,7 +106,22 @@ export default function Home() {
               </Stack>
             </Box>
             <Box sx={{ display: "grid", placeItems: "center" }}>
-              <ScanVisual />
+              <Box
+                sx={{
+                  bgcolor: "#f8f8f8",
+                  borderRadius: 4,
+                  p: { xs: 2.5, md: 3.5 },
+                  boxShadow: 6,
+                  maxWidth: "100%",
+                }}
+              >
+                <Box
+                  component="img"
+                  src="/logo-csr.jpg"
+                  alt={t("brand.name")}
+                  sx={{ width: { xs: 260, md: 360 }, maxWidth: "100%", height: "auto", display: "block" }}
+                />
+              </Box>
             </Box>
           </Box>
         </Container>
@@ -169,6 +193,26 @@ export default function Home() {
               </Button>
             </Box>
           </Box>
+        </Container>
+      </Box>
+
+      {/* ---------- روابط التواصل الاجتماعي (أسفل الصفحة) ---------- */}
+      <Box sx={{ borderTop: 1, borderColor: "divider", bgcolor: "action.hover" }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 5, md: 6 } }}>
+          <Stack spacing={2} alignItems="center" sx={{ textAlign: "center" }}>
+            <Typography color="text.secondary" sx={{ maxWidth: 560 }}>
+              {lang === "ar" ? "تابعونا على منصّات التواصل الاجتماعي" : "Follow us on social media"}
+            </Typography>
+            <SocialLinks
+              justify="center"
+              size="large"
+              data={{
+                facebook: settings?.facebook || SOCIAL.facebook,
+                instagram: settings?.instagram || SOCIAL.instagram,
+                email: settings?.contact_email || SOCIAL.email,
+              }}
+            />
+          </Stack>
         </Container>
       </Box>
     </Box>

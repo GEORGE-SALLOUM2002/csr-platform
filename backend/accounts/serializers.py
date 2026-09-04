@@ -110,6 +110,27 @@ class ChangePasswordSerializer(serializers.Serializer):
         return attrs
 
 
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """طلب إعادة تعيين كلمة المرور: يكفي إدخال البريد الإلكتروني."""
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """تأكيد إعادة التعيين: المُعرّف المُرمّز + الرمز + كلمة المرور الجديدة وتأكيدها."""
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
+    new_password2 = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["new_password2"]:
+            raise serializers.ValidationError({"new_password2": "كلمتا المرور الجديدتان غير متطابقتين."})
+        return attrs
+
+
 class AdminCreateEditorSerializer(serializers.Serializer):
     """إنشاء حساب مشرف علمي جديد (للمدير فقط): اسم + بريد + كلمة مرور."""
     full_name = serializers.CharField(max_length=150)

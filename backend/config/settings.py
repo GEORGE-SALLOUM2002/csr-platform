@@ -191,6 +191,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": os.getenv("THROTTLE_LOGIN", "5/min"),
         "register": os.getenv("THROTTLE_REGISTER", "10/hour"),
+        "password_reset": os.getenv("THROTTLE_PASSWORD_RESET", "5/hour"),
     },
 }
 
@@ -225,7 +226,9 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "")
 # رؤوس أمان عامة (آمنة في كل الأوضاع)
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
-X_FRAME_OPTIONS = "DENY"
+# SAMEORIGIN بدل DENY: يسمح بمعاينة ملفات PDF المرفوعة داخل الموقع نفسه
+# (نفس الأصل) مع بقاء الحماية من التأطير عبر مواقع خارجية.
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # إعادة التوجيه إلى HTTPS + كوكيز آمنة + HSTS — تُفعَّل بعد تجهيز شهادة TLS.
 # تبقى قابلة للضبط بالبيئة حتى لا تُقفل الموقع قبل توفّر HTTPS.

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView, LoginView, MeView, MyDoctorProfileView,
     DoctorDirectoryViewSet, AdminUserViewSet, CredentialDownloadView,
-    ChangePasswordView,
+    ChangePasswordView, PasswordResetRequestView, PasswordResetConfirmView,
 )
 
 router = DefaultRouter()
@@ -20,6 +20,8 @@ urlpatterns = [
     path("auth/me/", MeView.as_view(), name="me"),
     path("auth/me/profile/", MyDoctorProfileView.as_view(), name="my-profile"),
     path("auth/change-password/", ChangePasswordView.as_view(), name="change-password"),
+    path("auth/password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
+    path("auth/password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
     # تنزيل وثيقة اعتماد عبر رابط موقّع محدود الصلاحية
     path("credentials/<int:pk>/", CredentialDownloadView.as_view(), name="credential-download"),
     path("", include(router.urls)),

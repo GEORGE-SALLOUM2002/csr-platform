@@ -1,5 +1,8 @@
 {
-  "brand": { "name": "Radiology Assoc.", "tagline": "Scientific Radiology Society" },
+  "brand": {
+    "name": "Radiology Assoc.",
+    "tagline": "Scientific Radiology Society"
+  },
   "nav": {
     "home": "Home",
     "library": "Library",
@@ -56,12 +59,33 @@
     "loginError": "Invalid login credentials.",
     "registerSuccess": "Your request was sent! Your account is now pending admin approval.",
     "pendingApproval": "Your account is awaiting admin approval. You can upload content once activated.",
-    "welcome": "Welcome"
+    "welcome": "Welcome",
+    "forgotPassword": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "sendResetLink": "Send reset link",
+    "resetTitle": "Set a new password",
+    "resetSubmit": "Save new password"
   },
-  "roles": { "ADMIN": "System Admin", "EDITOR": "Scientific Editor", "DOCTOR": "Member Physician" },
-  "status": { "PENDING": "Pending review", "APPROVED": "Published", "REJECTED": "Rejected" },
-  "types": { "RESEARCH": "Research", "LECTURE": "Lecture", "ARTICLE": "Article" },
-  "categories": { "CONFERENCE": "Conference", "WORKSHOP": "Workshop", "SEMINAR": "Seminar" },
+  "roles": {
+    "ADMIN": "System Admin",
+    "EDITOR": "Scientific Editor",
+    "DOCTOR": "Member Physician"
+  },
+  "status": {
+    "PENDING": "Pending review",
+    "APPROVED": "Published",
+    "REJECTED": "Rejected"
+  },
+  "types": {
+    "RESEARCH": "Research",
+    "LECTURE": "Lecture",
+    "ARTICLE": "Article"
+  },
+  "categories": {
+    "CONFERENCE": "Conference",
+    "WORKSHOP": "Workshop",
+    "SEMINAR": "Seminar"
+  },
   "home": {
     "eyebrow": "An integrated scientific platform",
     "heroTitle": "A scientific home for radiologists",
@@ -101,14 +125,20 @@
     "files": "Scientific files",
     "watchVideo": "Watch video"
   },
-  "news": { "title": "News & Announcements", "subtitle": "Latest updates and official announcements." },
+  "news": {
+    "title": "News & Announcements",
+    "subtitle": "Latest updates and official announcements."
+  },
   "patients": {
     "title": "Patient Awareness Portal",
     "subtitle": "Trusted medical information, in plain language.",
     "faq": "Frequently asked questions",
     "topics": "Awareness topics"
   },
-  "board": { "title": "Board of Directors", "subtitle": "Those who lead the association." },
+  "board": {
+    "title": "Board of Directors",
+    "subtitle": "Those who lead the association."
+  },
   "contact": {
     "title": "Contact Us",
     "subtitle": "We'd love to hear from you.",

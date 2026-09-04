@@ -160,3 +160,45 @@ def send_account_rejected(user, reason=""):
         f"for details or reapply.</p>"
     )
     return _send(subject, user.email, text_body, html_inner)
+
+
+def send_password_reset(user, reset_url):
+    """رسالة إعادة تعيين كلمة المرور مع رابط محدود الصلاحية."""
+    name = user.full_name
+    subject = f"{settings.SITE_NAME}: إعادة تعيين كلمة المرور / Password reset"
+    text_body = (
+        f"مرحباً {name}،\n\n"
+        f"وصلنا طلب لإعادة تعيين كلمة مرور حسابك في {settings.SITE_NAME}. "
+        f"لتعيين كلمة مرور جديدة افتح الرابط التالي:\n{reset_url}\n\n"
+        f"إذا لم تطلب ذلك، تجاهل هذه الرسالة ولن يتغيّر شيء.\n"
+        f"الرابط صالح لفترة محدودة.\n\n"
+        f"— فريق {settings.SITE_NAME}\n\n"
+        f"----------------------------------------\n\n"
+        f"Hello {name},\n\n"
+        f"We received a request to reset the password for your {settings.SITE_NAME} account. "
+        f"To set a new password, open this link:\n{reset_url}\n\n"
+        f"If you did not request this, ignore this message and nothing will change. "
+        f"The link is valid for a limited time.\n\n"
+        f"— The {settings.SITE_NAME} team"
+    )
+    btn = (
+        f"<p style='margin:22px 0'><a href='{reset_url}' "
+        f"style='background:#0e7c7b;color:#fff;text-decoration:none;padding:11px 22px;"
+        f"border-radius:8px;font-weight:700;display:inline-block'>"
+        f"إعادة تعيين كلمة المرور / Reset password</a></p>"
+    )
+    html_inner = (
+        f"<p>مرحباً <strong>{name}</strong>،</p>"
+        f"<p>وصلنا طلب لإعادة تعيين كلمة مرور حسابك في {settings.SITE_NAME}. "
+        f"اضغط الزر أدناه لتعيين كلمة مرور جديدة:</p>"
+        f"{btn}"
+        f"<p style='color:#4e6c68;font-size:13px'>إذا لم تطلب ذلك فتجاهل هذه الرسالة — "
+        f"لن يتغيّر شيء. الرابط صالح لفترة محدودة.</p>"
+        f"<hr style='border:none;border-top:1px solid #e0eeea;margin:18px 0'>"
+        f"<p dir='ltr'>Hello <strong>{name}</strong>,</p>"
+        f"<p dir='ltr'>We received a request to reset your password. "
+        f"Click the button above to set a new one.</p>"
+        f"<p dir='ltr' style='color:#4e6c68;font-size:13px'>If you didn't request this, "
+        f"ignore this message. The link is valid for a limited time.</p>"
+    )
+    return _send(subject, user.email, text_body, html_inner)

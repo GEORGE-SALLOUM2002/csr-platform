@@ -67,6 +67,23 @@ export function getTheme(mode = "light", dir = "rtl") {
         },
       },
       MuiAppBar: { defaultProps: { color: "default", elevation: 0 } },
+      // حقول الإدخال بخلفية بيضاء (أو داكنة مطابقة للبطاقة) بدل الرمادي الفاتح
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            backgroundColor: isDark ? "#0D2523" : "#FFFFFF",
+            "&.Mui-disabled": { backgroundColor: isDark ? "#0A1F1D" : "#F7FAF9" },
+            // إبقاء الحقل أبيض دائماً — حتى عند الإكمال التلقائي (autofill) من المتصفح
+            "& input:-webkit-autofill, & input:-webkit-autofill:hover, & input:-webkit-autofill:focus, & input:-webkit-autofill:active": {
+              WebkitBoxShadow: `0 0 0 100px ${isDark ? "#0D2523" : "#FFFFFF"} inset`,
+              WebkitTextFillColor: isDark ? "#E7F2EF" : "#0B2B29",
+              caretColor: isDark ? "#E7F2EF" : "#0B2B29",
+              borderRadius: "inherit",
+              transition: "background-color 9999s ease-in-out 0s",
+            },
+          },
+        },
+      },
     },
   });
 }

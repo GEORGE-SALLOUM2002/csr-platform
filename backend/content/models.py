@@ -238,6 +238,10 @@ class SiteSettings(models.Model):
     telegram = models.URLField("تيليغرام", max_length=300, blank=True)
     whatsapp = models.URLField("واتساب", max_length=300, blank=True)
 
+    # مراجعة المحتوى العلمي قبل نشره: True = يبقى «بانتظار المراجعة» حتى يعتمده المشرف؛
+    # False = يُنشَر محتوى الأطباء مباشرةً دون مراجعة.
+    require_review = models.BooleanField("مراجعة المحتوى العلمي قبل نشره", default=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

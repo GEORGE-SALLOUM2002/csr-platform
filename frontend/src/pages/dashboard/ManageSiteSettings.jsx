@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Container, Card, CardContent, Box, TextField, Button, Typography, Alert, Stack, CircularProgress, Divider,
+  Switch, FormControlLabel,
 } from "@mui/material";
 import { PageHeader, Loader, ErrorState } from "../../components/ui";
 import SocialLinks from "../../components/SocialLinks";
@@ -31,6 +32,7 @@ export default function ManageSiteSettings() {
     if (!data) return;
     const init = {};
     ALL.forEach((f) => { init[f] = data[f] || ""; });
+    init.require_review = data.require_review ?? true;
     setForm(init);
   }, [data]);
 
@@ -77,6 +79,28 @@ export default function ManageSiteSettings() {
             <Stack spacing={3}>
               {saved && <Alert severity="success">{t("common.saved")}</Alert>}
               {saveError && <Alert severity="error">{t("common.error")}</Alert>}
+
+              <Box>
+                <Typography sx={{ fontWeight: 700, mb: 1 }}>{ar("مراجعة المحتوى العلمي", "Content moderation")}</Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={!!form.require_review}
+                      onChange={(e) => setForm((f) => ({ ...f, require_review: e.target.checked }))}
+                    />
+                  }
+                  label={ar("طلب مراجعة المحتوى قبل نشره", "Require review before publishing")}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                  {form.require_review
+                    ? ar("مُفعّل: يبقى محتوى الأطباء «بانتظار المراجعة» حتى يعتمده المشرف/المدير.",
+                         "On: doctors' content stays pending until an editor/admin approves it.")
+                    : ar("مُعطّل: يُنشَر محتوى الأطباء مباشرةً دون مراجعة.",
+                         "Off: doctors' content is published immediately without review.")}
+                </Typography>
+              </Box>
+
+              <Divider />
 
               <Box>
                 <Typography sx={{ fontWeight: 700, mb: 1.5 }}>{ar("معلومات التواصل", "Contact information")}</Typography>

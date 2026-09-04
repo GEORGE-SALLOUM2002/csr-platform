@@ -1,9 +1,10 @@
 /** تغيير كلمة المرور للمستخدم الحالي (متاح لأي دور مسجّل الدخول). */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Container, Card, CardContent, Box, TextField, Button, Alert, Stack, CircularProgress } from "@mui/material";
+import { Container, Card, CardContent, Box, Button, Alert, Stack, CircularProgress } from "@mui/material";
 import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import { PageHeader } from "../../components/ui";
+import PasswordField from "../../components/PasswordField";
 import { AuthAPI } from "../../api/services";
 import { useUI } from "../../context/UISettingsContext";
 import { useConfirm } from "../../context/ConfirmContext";
@@ -57,7 +58,7 @@ export default function ChangePassword() {
           <Stack spacing={2.5}>
             {done && <Alert severity="success">{ar("تم تغيير كلمة المرور بنجاح.", "Password changed successfully.")}</Alert>}
             {error && <Alert severity="error">{error}</Alert>}
-            <TextField
+            <PasswordField
               label={ar("كلمة المرور الحالية", "Current password")}
               type="password"
               value={form.old_password}
@@ -66,7 +67,7 @@ export default function ChangePassword() {
               fullWidth
               autoComplete="current-password"
             />
-            <TextField
+            <PasswordField
               label={ar("كلمة المرور الجديدة", "New password")}
               type="password"
               value={form.new_password}
@@ -76,7 +77,7 @@ export default function ChangePassword() {
               autoComplete="new-password"
               helperText={ar("٨ أحرف على الأقل، ولا تكون شائعة أو رقمية بالكامل.", "At least 8 characters, not too common or entirely numeric.")}
             />
-            <TextField
+            <PasswordField
               label={ar("تأكيد كلمة المرور الجديدة", "Confirm new password")}
               type="password"
               value={form.new_password2}

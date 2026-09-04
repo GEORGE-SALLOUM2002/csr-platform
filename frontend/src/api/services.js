@@ -15,6 +15,8 @@ export const AuthAPI = {
   updateProfile: (data, isForm = false) =>
     client.patch("/auth/me/profile/", data, isForm ? form : {}),
   changePassword: (data) => client.post("/auth/change-password/", data),
+  requestPasswordReset: (email) => client.post("/auth/password-reset/", { email }),
+  confirmPasswordReset: (data) => client.post("/auth/password-reset/confirm/", data),
 };
 
 // ---------------- دليل الأطباء ----------------

@@ -9,6 +9,7 @@ import {
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import { useAuth } from "../../context/AuthContext";
 import { useUI } from "../../context/UISettingsContext";
+import PasswordField from "../../components/PasswordField";
 
 const EMPTY = {
   full_name: "", email: "", password: "", password2: "",
@@ -102,6 +103,16 @@ export default function Register() {
     />
   );
 
+  const pwdField = (name, labelAr, labelEn, opts = {}) => (
+    <PasswordField
+      label={ar(labelAr, labelEn)}
+      value={form[name]}
+      onChange={set(name)}
+      fullWidth
+      {...opts}
+    />
+  );
+
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 4, md: 8 } }}>
       <Card elevation={0}>
@@ -129,8 +140,8 @@ export default function Register() {
                   {field("full_name", "الاسم الكامل", "Full name", { required: true, autoComplete: "name" })}
                   {field("email", "البريد الإلكتروني", "Email", { required: true, type: "email", autoComplete: "email" })}
                   <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
-                    {field("password", "كلمة المرور", "Password", { required: true, type: "password", autoComplete: "new-password" })}
-                    {field("password2", "تأكيد كلمة المرور", "Confirm password", { required: true, type: "password", autoComplete: "new-password" })}
+                    {pwdField("password", "كلمة المرور", "Password", { required: true, autoComplete: "new-password" })}
+                    {pwdField("password2", "تأكيد كلمة المرور", "Confirm password", { required: true, autoComplete: "new-password" })}
                   </Box>
 
                   <Divider textAlign={lang === "ar" ? "right" : "left"}>

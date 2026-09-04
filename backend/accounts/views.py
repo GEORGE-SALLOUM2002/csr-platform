@@ -3,7 +3,10 @@
 """
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, viewsets, permissions, status
@@ -21,6 +24,7 @@ from .serializers import (
     RegisterSerializer, UserSerializer, DoctorProfileSerializer,
     DoctorPublicSerializer, MyTokenObtainPairSerializer, AdminUserDetailSerializer,
     ChangePasswordSerializer, AdminCreateEditorSerializer,
+    PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
 )
 
 User = get_user_model()
@@ -145,6 +149,58 @@ class ChangePasswordView(APIView):
         user.set_password(ser.validated_data["new_password"])
         user.save(update_fields=["password"])
         return Response({"detail": "تم تغيير كلمة المرور بنجاح."})
+
+
+class PasswordResetRequestView(APIView):
+    """طلب إعادة تعيين كلمة المرور عبر البريد.
+
+    يقبل بريداً إلكترونياً؛ إن وُجد حساب نشِط بهذا البريد أُرسل إليه رابط إعادة
+    التعيين. لأسباب أمنية نُعيد الاستجابة نفسها سواء وُجد الحساب أم لا (حتى لا
+    نكشف البُرد المسجّلة). الرابط يعتمد رمز Django القياسي (صالح لفترة محدودة).
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password_reset"
+
+    def post(self, request):
+        ser = PasswordResetRequestSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        email = ser.validated_data["email"]
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            base = (settings.SITE_URL or "").rstrip("/")
+            reset_url = f"{base}/reset-password?uid={uid}&token={token}"
+            emails.send_password_reset(user, reset_url)
+        # استجابة موحّدة دائماً (لا نكشف إن كان البريد مسجّلاً)
+        return Response(
+            {"detail": "إن كان البريد مسجّلاً لدينا فستصلك رسالة بخطوات إعادة التعيين."}
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """تأكيد إعادة التعيين: يتحقق من (uid + token) ويضبط كلمة مرور جديدة."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password_reset"
+
+    def post(self, request):
+        ser = PasswordResetConfirmSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        try:
+            uid = force_str(urlsafe_base64_decode(ser.validated_data["uid"]))
+            user = User.objects.get(pk=uid, is_active=True)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+        if user is None or not default_token_generator.check_token(user, ser.validated_data["token"]):
+            return Response(
+                {"detail": "رابط إعادة التعيين غير صالح أو منتهي الصلاحية. اطلب رابطاً جديداً."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.set_password(ser.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return Response({"detail": "تم تعيين كلمة المرور الجديدة بنجاح. يمكنك الآن تسجيل الدخول."})
 
 
 class DoctorDirectoryViewSet(viewsets.ReadOnlyModelViewSet):

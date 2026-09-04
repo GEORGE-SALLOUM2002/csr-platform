@@ -1,17 +1,17 @@
 /** صفحة تسجيل الدخول: بريد إلكتروني وكلمة مرور. */
 import { useState } from "react";
-import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Container, Card, CardContent, Box, TextField, Button, Typography, Alert, Stack, Link, CircularProgress,
 } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
+import PasswordField from "../../components/PasswordField";
 
 export default function Login() {
   const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +24,7 @@ export default function Login() {
     setError(false);
     try {
       await login(email, password);
-      navigate(location.state?.from || "/dashboard");
+      navigate("/");
     } catch {
       setError(true);
     } finally {
@@ -52,8 +52,7 @@ export default function Login() {
                 fullWidth
                 autoComplete="email"
               />
-              <TextField
-                type="password"
+              <PasswordField
                 label={t("auth.password")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -73,7 +72,13 @@ export default function Login() {
             </Stack>
           </Box>
 
-          <Typography sx={{ mt: 3, textAlign: "center" }}>
+          <Typography sx={{ mt: 2, textAlign: "center" }}>
+            <Link component={RouterLink} to="/forgot-password">
+              {t("auth.forgotPassword")}
+            </Link>
+          </Typography>
+
+          <Typography sx={{ mt: 1.5, textAlign: "center" }}>
             <Link component={RouterLink} to="/register">
               {t("auth.noAccount")}
             </Link>

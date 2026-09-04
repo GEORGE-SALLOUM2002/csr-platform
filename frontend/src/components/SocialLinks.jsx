@@ -8,6 +8,7 @@ import LinkedIn from "@mui/icons-material/LinkedIn";
 import Telegram from "@mui/icons-material/Telegram";
 import WhatsApp from "@mui/icons-material/WhatsApp";
 import Language from "@mui/icons-material/Language";
+import EmailRounded from "@mui/icons-material/EmailRounded";
 
 const ICONS = {
   website: { Icon: Language, label: "الموقع" },
@@ -18,12 +19,14 @@ const ICONS = {
   linkedin: { Icon: LinkedIn, label: "LinkedIn" },
   telegram: { Icon: Telegram, label: "Telegram" },
   whatsapp: { Icon: WhatsApp, label: "WhatsApp" },
+  email: { Icon: EmailRounded, label: "البريد الإلكتروني" },
 };
 
-const ORDER = ["website", "facebook", "twitter", "instagram", "youtube", "linkedin", "telegram", "whatsapp"];
+const ORDER = ["website", "facebook", "twitter", "instagram", "youtube", "linkedin", "telegram", "whatsapp", "email"];
 
 function normalize(key, value) {
   const v = String(value).trim();
+  if (key === "email") return v.startsWith("mailto:") ? v : `mailto:${v}`;
   if (key === "whatsapp" && /^\+?[\d\s-]+$/.test(v)) {
     return `https://wa.me/${v.replace(/[^\d]/g, "")}`;
   }

@@ -1,5 +1,8 @@
 """واجهات المكتبة: التصنيفات + الموارد العلمية مع سير الاعتماد."""
 from django.db.models import Q
+from django.utils import timezone
+
+from content.models import SiteSettings
 from rest_framework import viewsets, permissions, status as http_status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -46,11 +49,26 @@ class ResourceViewSet(viewsets.ModelViewSet):
         # الطبيب غير المعتمد لا يستطيع الرفع
         if u.is_doctor and not u.is_approved:
             raise PermissionDenied("حسابك بانتظار اعتماد الإدارة قبل أن تتمكن من رفع محتوى.")
-        # المشرف/المدير يُعتمد محتواه مباشرة، والطبيب يبقى بانتظار المراجعة
+        # المشرف/المدير يُعتمد محتواه مباشرة
         if u.is_admin or u.is_editor:
             serializer.save(author=u, status=Resource.Status.APPROVED, reviewed_by=u)
         else:
-            serializer.save(author=u, status=Resource.Status.PENDING)
+            # الطبيب: يخضع لمفتاح «مراجعة المحتوى قبل نشره» في إعدادات الموقع.
+            # مُفعّل → بانتظار المراجعة؛ مُعطّل → يُنشَر مباشرةً.
+            if SiteSettings.load().require_review:
+                serializer.save(author=u, status=Resource.Status.PENDING)
+            else:
+                serializer.save(
+                    author=u,
+                    status=Resource.Status.APPROVED,
+                    published_at=timezone.now(),
+                )
+
+    def perform_destroy(self, instance):
+        # حذف الملف المرفوع من التخزين قبل حذف السجل (تنظيف)
+        if instance.file:
+            instance.file.delete(save=False)
+        instance.delete()
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def mine(self, request):
