@@ -1,8 +1,7 @@
-/** من نحن: نبذة عن الجمعية ورسالتها مع رسم بصري. */
+/** من نحن: نبذة عن الجمعية ورسالتها مع شعار الجمعية. */
 import { useTranslation } from "react-i18next";
 import { Container, Box, Typography, Stack } from "@mui/material";
 import { PageHeader } from "../components/ui";
-import ScanVisual from "../components/ScanVisual";
 import { useUI } from "../context/UISettingsContext";
 
 export default function About() {
@@ -29,8 +28,16 @@ export default function About() {
               : "It also organizes scientific conferences, seminars, and workshops, and is committed to spreading health awareness among patients in clear and trustworthy language, in the belief that medical knowledge is a mission that serves both the profession and the community."}
           </Typography>
         </Stack>
+        {/* شعار الجمعية (نفس شعار الصفحة الرئيسية) */}
         <Box sx={{ display: "grid", placeItems: "center" }}>
-          <ScanVisual />
+          <Box sx={{ bgcolor: "#f8f8f8", borderRadius: 4, p: { xs: 2.5, md: 3.5 }, boxShadow: 6, maxWidth: "100%" }}>
+            <Box
+              component="img"
+              src="/logo-csr.jpg"
+              alt={t("brand.name")}
+              sx={{ width: { xs: 260, md: 360 }, maxWidth: "100%", height: "auto", display: "block" }}
+            />
+          </Box>
         </Box>
       </Box>
     </Container>
