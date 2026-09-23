@@ -13,6 +13,7 @@ import HealthAndSafetyRoundedIcon from "@mui/icons-material/HealthAndSafetyRound
 import MailRoundedIcon from "@mui/icons-material/MailRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import FeaturedBanner from "../components/FeaturedBanner";
+import EventsCalendar from "../components/EventsCalendar";
 import SocialLinks from "../components/SocialLinks";
 import { ContentAPI, LibraryAPI } from "../api/services";
 import client from "../api/client";
@@ -129,6 +130,9 @@ export default function Home() {
 
       {/* ---------- شريط الإعلانات والمؤتمرات ---------- */}
       <FeaturedBanner />
+
+      {/* ---------- روزنامة الأنشطة والمؤتمرات ---------- */}
+      <EventsCalendar />
 
       {/* ---------- وصول سريع ---------- */}
       <Container maxWidth="lg" sx={{ py: { xs: 5, md: 7 } }}>
