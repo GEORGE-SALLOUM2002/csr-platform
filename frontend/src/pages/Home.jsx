@@ -21,6 +21,7 @@ import { asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
 
+
 // روابط التواصل الافتراضية للجمعية (تُستخدم إن لم تُضبط من لوحة التحكم)
 const SOCIAL = {
   facebook: "https://www.facebook.com/csradiologists",
@@ -118,7 +119,7 @@ export default function Home() {
               >
                 <Box
                   component="img"
-                  src="/logo-csr.jpg"
+                  src="/logo.png"
                   alt={t("brand.name")}
                   sx={{ width: { xs: 260, md: 360 }, maxWidth: "100%", height: "auto", display: "block" }}
                 />

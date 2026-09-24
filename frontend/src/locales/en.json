@@ -1,7 +1,7 @@
 {
   "brand": {
     "name": "Radiology Assoc.",
-    "tagline": "Scientific Radiology Society"
+    "tagline": "Community of Syrian Radiologists"
   },
   "nav": {
     "home": "Home",
@@ -205,7 +205,6 @@
     "manageCategories": "Manage categories"
   },
   "footer": {
-    "rights": "© 2026 Radiology Association. All rights reserved.",
-    "prototype": "Prototype"
+    "rights": "© 2026 Community of Syrian Radiologists. All rights reserved."
   }
 }

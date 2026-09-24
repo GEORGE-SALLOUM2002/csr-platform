@@ -23,7 +23,6 @@ export default function Footer() {
       <Typography variant="body2" color="text.secondary">
         {t("footer.rights")}
       </Typography>
-      <Chip label={t("footer.prototype")} size="small" color="secondary" variant="outlined" />
     </Box>
   );
 }
