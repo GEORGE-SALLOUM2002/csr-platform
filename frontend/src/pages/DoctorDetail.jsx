@@ -32,7 +32,7 @@ export default function DoctorDetail() {
 
       {/* الترويسة: الصورة والاسم والاختصاص */}
       <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "center", sm: "flex-start" }, gap: 3, textAlign: { xs: "center", sm: "start" } }}>
-        <Avatar src={data.photo || undefined} sx={{ width: 120, height: 120, bgcolor: "primary.main", fontSize: "3rem" }}>
+        <Avatar src={data.photo || "/logo.svg"} sx={{ width: 120, height: 120, bgcolor: "primary.main", fontSize: "3rem" }}>
           {data.full_name?.charAt(0)}
         </Avatar>
         <Box>

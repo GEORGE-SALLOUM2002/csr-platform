@@ -6,7 +6,14 @@ import { useState } from "react";
 import { Outlet, useNavigate, Link as RouterLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  Box, AppBar, Toolbar, IconButton, Drawer, Button, Tooltip, Typography,
+  Box,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Drawer,
+  Button,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import TranslateRoundedIcon from "@mui/icons-material/TranslateRounded";
@@ -39,9 +46,18 @@ export default function Layout() {
   };
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
       {/* ------- الشريط الجانبي ------- */}
-      <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
+      <Box
+        component="nav"
+        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+      >
         {/* نسخة الجوال (مؤقتة) */}
         <Drawer
           variant="temporary"
@@ -51,7 +67,10 @@ export default function Layout() {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+              boxSizing: "border-box",
+            },
           }}
         >
           <Sidebar onNavigate={closeMobile} />
@@ -63,7 +82,12 @@ export default function Layout() {
           open
           sx={{
             display: { xs: "none", md: "block" },
-            "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box", border: 0, boxShadow: "0 0 24px rgba(0,0,0,.05)" },
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+              boxSizing: "border-box",
+              border: 0,
+              boxShadow: "0 0 24px rgba(0,0,0,.05)",
+            },
           }}
         >
           <Sidebar />
@@ -71,7 +95,15 @@ export default function Layout() {
       </Box>
 
       {/* ------- المحتوى الرئيسي ------- */}
-      <Box component="main" sx={{ flexGrow: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <AnnouncementBar />
         <AppBar
           position="sticky"
@@ -94,34 +126,99 @@ export default function Layout() {
             <Typography
               component={RouterLink}
               to="/"
-              sx={{ display: { xs: "flex", md: "none" }, alignItems: "center", gap: 1, fontWeight: 700, fontFamily: '"El Messiri", sans-serif', color: "text.primary" }}
+              sx={{
+                display: { xs: "flex", md: "none" },
+                alignItems: "center",
+                gap: 1,
+                fontWeight: 700,
+                fontFamily: '"El Messiri", sans-serif',
+                color: "text.primary",
+                fontSize: { xs: "0.75rem", sm: "1rem" },
+                lineHeight: 1.2,
+                maxWidth: { xs: 160, sm: "none" },
+                
+              }}
             >
-              <Box component="img" src="/logo.svg" alt="" sx={{ width: 30, height: 30 }} />
+              <Box
+                component="img"
+                src="/logo.png"
+                alt=""
+                sx={{ width: 30, height: 30 }}
+              />
               {t("brand.name")}
             </Typography>
 
             <Box sx={{ flexGrow: 1 }} />
 
             <Tooltip title={lang === "ar" ? "English" : "العربية"}>
-              <Button onClick={toggleLang} color="inherit" startIcon={<TranslateRoundedIcon />} sx={{ minWidth: 0 }}>
+              <Button
+                onClick={toggleLang}
+                color="inherit"
+                startIcon={<TranslateRoundedIcon />}
+                sx={{ minWidth: 0 }}
+              >
                 {lang === "ar" ? "EN" : "ع"}
               </Button>
             </Tooltip>
 
             <Tooltip title={mode === "dark" ? "Light" : "Dark"}>
               <IconButton onClick={toggleMode} color="inherit">
-                {mode === "dark" ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />}
+                {mode === "dark" ? (
+                  <LightModeRoundedIcon />
+                ) : (
+                  <DarkModeRoundedIcon />
+                )}
               </IconButton>
             </Tooltip>
 
             {isAuthenticated ? (
-              <Button onClick={handleLogout} color="inherit" startIcon={<LogoutRoundedIcon />}>
+              <Button
+                onClick={handleLogout}
+                color="inherit"
+                startIcon={<LogoutRoundedIcon />}
+                  sx={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 0.75,
+    borderRadius: 5,
+    px: { xs: 3.5, sm: 2.25 },
+    py: 0.75,
+    lineHeight: 1,
+    fontWeight: 700,
+    fontSize: { xs: "0.75rem", sm: "0.95rem" },
+    whiteSpace: "nowrap",
+  }}
+              >
                 {t("auth.logout")}
               </Button>
             ) : (
-              <Button component={RouterLink} to="/login" variant="contained" startIcon={<LoginRoundedIcon />}>
-                {t("auth.login")}
-              </Button>
+<Button
+  component={RouterLink}
+  to="/login"
+  variant="contained"
+  sx={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 0.75,
+    borderRadius: 5,
+    px: { xs: 3.5, sm: 2.25 },
+    py: 0.75,
+    lineHeight: 1,
+    fontWeight: 700,
+    fontSize: { xs: "0.75rem", sm: "0.95rem" },
+    whiteSpace: "nowrap",
+  }}
+>
+  <LoginRoundedIcon
+    sx={{
+      fontSize: "1.15em",
+      transform: lang === "ar" ? "scaleX(-1)" : "none",
+    }}
+  />
+  <Box component="span" sx={{ lineHeight: 1, pt: lang === "ar" ? "2px" : 0 }}>
+    {t("auth.login")}
+  </Box>
+</Button>
             )}
           </Toolbar>
         </AppBar>

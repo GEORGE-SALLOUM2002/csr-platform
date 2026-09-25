@@ -62,7 +62,7 @@ export default function Doctors() {
             <Card key={d.id} elevation={0}>
               <CardActionArea component={RouterLink} to={`/doctors/${d.id}`} sx={{ height: "100%", p: 1 }}>
                 <CardContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 0.75, height: "100%" }}>
-                  <Avatar src={d.photo || undefined} sx={{ width: 84, height: 84, mb: 1, bgcolor: "primary.main", fontSize: "2rem" }}>
+                  <Avatar src={d.photo || "/logo.svg"} sx={{ width: 84, height: 84, mb: 1, bgcolor: "primary.main", fontSize: "2rem" }}>
                     {d.full_name?.charAt(0)}
                   </Avatar>
                   <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.1rem" }}>
