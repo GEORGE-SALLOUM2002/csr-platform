@@ -136,7 +136,6 @@ export default function Layout() {
                 fontSize: { xs: "0.75rem", sm: "1rem" },
                 lineHeight: 1.2,
                 maxWidth: { xs: 160, sm: "none" },
-                
               }}
             >
               <Box
@@ -176,49 +175,52 @@ export default function Layout() {
                 onClick={handleLogout}
                 color="inherit"
                 startIcon={<LogoutRoundedIcon />}
-                  sx={{
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 0.75,
-    borderRadius: 5,
-    px: { xs: 3.5, sm: 2.25 },
-    py: 0.75,
-    lineHeight: 1,
-    fontWeight: 700,
-    fontSize: { xs: "0.75rem", sm: "0.95rem" },
-    whiteSpace: "nowrap",
-  }}
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  borderRadius: 5,
+                  px: { xs: 3.5, sm: 2.25 },
+                  py: 0.75,
+                  lineHeight: 1,
+                  fontWeight: 700,
+                  fontSize: { xs: "0.75rem", sm: "0.95rem" },
+                  whiteSpace: "nowrap",
+                }}
               >
                 {t("auth.logout")}
               </Button>
             ) : (
-<Button
-  component={RouterLink}
-  to="/login"
-  variant="contained"
-  sx={{
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 0.75,
-    borderRadius: 5,
-    px: { xs: 3.5, sm: 2.25 },
-    py: 0.75,
-    lineHeight: 1,
-    fontWeight: 700,
-    fontSize: { xs: "0.75rem", sm: "0.95rem" },
-    whiteSpace: "nowrap",
-  }}
->
-  <LoginRoundedIcon
-    sx={{
-      fontSize: "1.15em",
-      transform: lang === "ar" ? "scaleX(-1)" : "none",
-    }}
-  />
-  <Box component="span" sx={{ lineHeight: 1, pt: lang === "ar" ? "2px" : 0 }}>
-    {t("auth.login")}
-  </Box>
-</Button>
+              <Button
+                component={RouterLink}
+                to="/login"
+                variant="contained"
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  borderRadius: 5,
+                  px: { xs: 3.5, sm: 2.25 },
+                  py: 0.75,
+                  lineHeight: 1,
+                  fontWeight: 700,
+                  fontSize: { xs: "0.75rem", sm: "0.95rem" },
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <LoginRoundedIcon
+                  sx={{
+                    fontSize: "1.15em",
+                    transform: lang === "ar" ? "scaleX(-1)" : "none",
+                  }}
+                />
+                <Box
+                  component="span"
+                  sx={{ lineHeight: 1, pt: lang === "ar" ? "2px" : 0 }}
+                >
+                  {t("auth.login")}
+                </Box>
+              </Button>
             )}
           </Toolbar>
         </AppBar>
