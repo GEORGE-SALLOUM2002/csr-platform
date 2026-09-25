@@ -119,7 +119,7 @@ export default function Home() {
               >
                 <Box
                   component="img"
-                  src="/logo.png"
+                  src="/logo-csr.jpg"
                   alt={t("brand.name")}
                   sx={{ width: { xs: 260, md: 360 }, maxWidth: "100%", height: "auto", display: "block" }}
                 />

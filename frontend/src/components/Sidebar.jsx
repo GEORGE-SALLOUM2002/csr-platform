@@ -112,7 +112,7 @@ export default function Sidebar({ onNavigate }) {
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* الشعار */}
       <Box sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 1.5 }}>
-        <Box component="img" src="/logo.svg" alt="" sx={{ width: 42, height: 42 }} />
+        <Box component="img" src="/logo.png" alt="" sx={{ width: 42, height: 42 }} />
         <Box>
           <Typography sx={{ fontFamily: '"El Messiri", sans-serif', fontWeight: 700, fontSize: "1.1rem", lineHeight: 1.1 }}>
             {t("brand.name")}
