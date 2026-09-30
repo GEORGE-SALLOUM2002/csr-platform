@@ -1,6 +1,6 @@
 /**
  * الهيكل العام: شريط جانبي (Drawer) دائم على الشاشات الكبيرة ومؤقّت على الجوال،
- * مع شريط علوي (AppBar) يحوي أزرار اللغة والوضع والدخول/الخروج.
+ * مع شريط علوي (AppBar) يحوي أزرار اللغة والوضع (على الشاشات الكبيرة) والدخول/الخروج.
  */
 import { useState } from "react";
 import { Outlet, useNavigate, Link as RouterLink } from "react-router-dom";
@@ -154,19 +154,19 @@ export default function Layout() {
                 onClick={toggleLang}
                 color="inherit"
                 startIcon={<TranslateRoundedIcon />}
-                sx={{ minWidth: 0 }}
+                sx={{ minWidth: 0, display: { xs: "none", md: "inline-flex" } }}
               >
                 {lang === "ar" ? "EN" : "ع"}
               </Button>
             </Tooltip>
 
             <Tooltip title={mode === "dark" ? "Light" : "Dark"}>
-              <IconButton onClick={toggleMode} color="inherit">
-                {mode === "dark" ? (
-                  <LightModeRoundedIcon />
-                ) : (
-                  <DarkModeRoundedIcon />
-                )}
+              <IconButton
+                onClick={toggleMode}
+                color="inherit"
+                sx={{ display: { xs: "none", md: "inline-flex" } }}
+              >
+                {mode === "dark" ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />}
               </IconButton>
             </Tooltip>
 

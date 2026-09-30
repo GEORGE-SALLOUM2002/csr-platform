@@ -6,7 +6,7 @@ import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Box, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader,
-  Divider, Typography, Chip, Avatar,
+  Divider, Typography, Chip, Avatar, Button,
 } from "@mui/material";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
@@ -28,7 +28,11 @@ import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
+import TranslateRoundedIcon from "@mui/icons-material/TranslateRounded";
+import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import { useAuth } from "../context/AuthContext";
+import { useUI } from "../context/UISettingsContext";
 
 // رابط مشترك لكل الأدوار: تغيير كلمة المرور
 const changePasswordLink = { to: "/dashboard/change-password", labelKey: "dashboard.changePassword", icon: <LockResetRoundedIcon /> };
@@ -105,6 +109,7 @@ function NavItem({ to, icon, label, end, onNavigate }) {
 export default function Sidebar({ onNavigate }) {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
+  const { lang, toggleLang, mode, toggleMode } = useUI();
   // كل مستخدم مسجّل يرى رابط تغيير كلمة المرور (إضافةً لروابط دوره)
   const roleLinks = user ? [...(dashboardLinks[user.role] || []), changePasswordLink] : [];
 
@@ -171,6 +176,35 @@ export default function Sidebar({ onNavigate }) {
               </Typography>
               <Chip label={t(`roles.${user.role}`)} size="small" color="primary" variant="outlined" sx={{ height: 20, fontSize: ".7rem" }} />
             </Box>
+          </Box>
+        </>
+      )}
+
+      {/* تغيير اللغة والوضع الليلي — في نهاية القائمة الجانبية على الموبايل فقط */}
+      {onNavigate && (
+        <>
+          <Divider />
+          <Box sx={{ p: 2, display: "flex", gap: 1 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={toggleLang}
+              startIcon={<TranslateRoundedIcon />}
+              sx={{ borderRadius: 5, fontWeight: 700 }}
+            >
+              {lang === "ar" ? "English" : "العربية"}
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={toggleMode}
+              startIcon={mode === "dark" ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />}
+              sx={{ borderRadius: 5, fontWeight: 700 }}
+            >
+              {mode === "dark"
+                ? (lang === "ar" ? "فاتح" : "Light")
+                : (lang === "ar" ? "ليلي" : "Dark")}
+            </Button>
           </Box>
         </>
       )}

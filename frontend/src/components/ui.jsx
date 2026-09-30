@@ -44,7 +44,8 @@ export function EmptyState({ label }) {
 export function PageHeader({ eyebrow, title, subtitle }) {
   return (
     <Box sx={{ mb: 4 }}>
-      {eyebrow && (
+      {/* لا نعرض العنوان الصغير إذا كان مطابقاً للعنوان الرئيسي (لتجنّب التكرار) */}
+      {eyebrow && eyebrow !== title && (
         <Typography
           sx={{ color: "primary.main", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", fontSize: ".8rem", mb: 1 }}
         >
