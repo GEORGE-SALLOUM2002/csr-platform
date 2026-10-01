@@ -109,7 +109,7 @@ export default function FeaturedBanner() {
                   size="small"
                   sx={{ bgcolor: "rgba(255,255,255,.2)", color: "#fff", mb: 1.5, "& .MuiChip-icon": { color: "#fff" } }}
                 />
-                <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1.2, mb: 1, textShadow: "0 2px 8px rgba(0,0,0,.3)" }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: "1.4rem", sm: "1.8rem", md: "2.125rem" }, lineHeight: 1.25, mb: 1, textShadow: "0 2px 8px rgba(0,0,0,.3)" }}>
                   {s.title}
                 </Typography>
                 {isAct && (
@@ -138,10 +138,10 @@ export default function FeaturedBanner() {
 
         {slides.length > 1 && (
           <>
-            <IconButton onClick={() => move(-1)} aria-label="previous" sx={{ position: "absolute", top: "50%", insetInlineStart: 8, transform: "translateY(-50%)", bgcolor: "rgba(0,0,0,.3)", color: "#fff", "&:hover": { bgcolor: "rgba(0,0,0,.5)" } }}>
+            <IconButton onClick={() => move(-1)} aria-label="previous" sx={{ display: { xs: "none", sm: "inline-flex" }, position: "absolute", top: "50%", insetInlineStart: 8, transform: "translateY(-50%)", bgcolor: "rgba(0,0,0,.3)", color: "#fff", "&:hover": { bgcolor: "rgba(0,0,0,.5)" } }}>
               <ChevronRightRoundedIcon sx={{ transform: lang === "ar" ? "none" : "scaleX(-1)" }} />
             </IconButton>
-            <IconButton onClick={() => move(1)} aria-label="next" sx={{ position: "absolute", top: "50%", insetInlineEnd: 8, transform: "translateY(-50%)", bgcolor: "rgba(0,0,0,.3)", color: "#fff", "&:hover": { bgcolor: "rgba(0,0,0,.5)" } }}>
+            <IconButton onClick={() => move(1)} aria-label="next" sx={{ display: { xs: "none", sm: "inline-flex" }, position: "absolute", top: "50%", insetInlineEnd: 8, transform: "translateY(-50%)", bgcolor: "rgba(0,0,0,.3)", color: "#fff", "&:hover": { bgcolor: "rgba(0,0,0,.5)" } }}>
               <ChevronLeftRoundedIcon sx={{ transform: lang === "ar" ? "none" : "scaleX(-1)" }} />
             </IconButton>
             <Box sx={{ position: "absolute", bottom: 12, insetInlineStart: 0, insetInlineEnd: 0, display: "flex", justifyContent: "center", gap: 1 }}>

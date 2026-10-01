@@ -121,7 +121,7 @@ export default function EventsCalendar() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.1fr 0.9fr" }, gap: 3, alignItems: "start" }}>
         {/* ---------- الروزنامة ---------- */}
-        <Card elevation={0} sx={{ p: { xs: 1.5, md: 2.5 } }}>
+        <Card elevation={0} sx={{ p: { xs: 1.25, md: 2.5 } }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
             <IconButton onClick={() => move(-1)} aria-label="previous month">
               <ChevronRightRoundedIcon sx={{ transform: isAr ? "none" : "scaleX(-1)" }} />
@@ -137,9 +137,9 @@ export default function EventsCalendar() {
             </IconButton>
           </Stack>
 
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 0.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: { xs: 0.25, sm: 0.5 } }}>
             {weekDays.map((w) => (
-              <Typography key={w} variant="caption" color="text.secondary" sx={{ textAlign: "center", fontWeight: 700, py: 0.5 }}>
+              <Typography key={w} variant="caption" color="text.secondary" sx={{ textAlign: "center", fontWeight: 700, py: 0.5, fontSize: { xs: ".6rem", sm: ".75rem" }, whiteSpace: "nowrap", overflow: "hidden" }}>
                 {w}
               </Typography>
             ))}
