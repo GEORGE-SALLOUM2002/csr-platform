@@ -17,6 +17,11 @@ import { tr } from "../utils/tr";
 
 const stripHtml = (h) => (h ? h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "");
 
+// يكسر الكلمات/الروابط الطويلة حتى لا يخرج النص عن حدود البطاقة على الموبايل
+const wrapSx = { overflowWrap: "anywhere", wordBreak: "break-word" };
+// يقصّ النص إلى عدد أسطر محدّد مع «…»
+const clamp = (n) => ({ display: "-webkit-box", WebkitLineClamp: n, WebkitBoxOrient: "vertical", overflow: "hidden" });
+
 export default function Patients() {
   const { t } = useTranslation();
   const { lang } = useUI();
@@ -28,7 +33,7 @@ export default function Patients() {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
-      <PageHeader eyebrow={t("nav.patients")} title={t("patients.title")} subtitle={t("patients.subtitle")} />
+      <PageHeader title={t("patients.title")} subtitle={t("patients.subtitle")} />
 
       {loading ? (
         <Loader />
@@ -44,17 +49,17 @@ export default function Patients() {
           {topics.length === 0 ? (
             <EmptyState />
           ) : (
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "repeat(3, 1fr)" }, gap: 2.5, mb: 5 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: { xs: 1.5, md: 2.5 }, mb: 5 }}>
               {topics.map((tp) => {
                 const summary = tr(tp, "summary", lang) || stripHtml(tr(tp, "body", lang)).slice(0, 120);
                 return (
-                  <Card key={tp.id} elevation={0} sx={{ transition: "box-shadow .2s, transform .2s", "&:hover": { boxShadow: 4, transform: "translateY(-4px)" } }}>
-                    <CardActionArea onClick={() => setOpen(tp)} sx={{ height: "100%", p: 1 }}>
-                      <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1, height: "100%" }}>
-                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
+                  <Card key={tp.id} elevation={0} sx={{ minWidth: 0, transition: "box-shadow .2s, transform .2s", "&:hover": { boxShadow: 4, transform: "translateY(-4px)" } }}>
+                    <CardActionArea onClick={() => setOpen(tp)} sx={{ height: "100%", p: { xs: 0.5, md: 1 }, display: "flex", alignItems: "stretch" }}>
+                      <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1, height: "100%", width: "100%", minWidth: 0 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: "1rem", md: "1.05rem" }, lineHeight: 1.5, ...wrapSx, ...clamp(3) }}>
                           {tr(tp, "title", lang)}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, ...wrapSx, ...clamp(3) }}>
                           {summary}
                         </Typography>
                         <Typography variant="body2" color="primary" sx={{ mt: "auto", fontWeight: 600 }}>
@@ -77,11 +82,11 @@ export default function Patients() {
             <Box>
               {faqs.map((f) => (
                 <Accordion key={f.id} elevation={0} disableGutters>
-                  <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                    <Typography fontWeight={600}>{tr(f, "title", lang)}</Typography>
+                  <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />} sx={{ "& .MuiAccordionSummary-content": { minWidth: 0 } }}>
+                    <Typography fontWeight={600} sx={{ lineHeight: 1.6, ...wrapSx }}>{tr(f, "title", lang)}</Typography>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography color="text.secondary" sx={{ whiteSpace: "pre-line" }}>
+                    <Typography color="text.secondary" sx={{ whiteSpace: "pre-line", ...wrapSx }}>
                       {tr(f, "body", lang)}
                     </Typography>
                   </AccordionDetails>
@@ -95,7 +100,7 @@ export default function Patients() {
       <Dialog open={!!open} onClose={() => setOpen(null)} maxWidth="md" fullWidth dir={lang === "ar" ? "rtl" : "ltr"}>
         {open && (
           <>
-            <DialogTitle sx={{ pr: 6, fontFamily: '"El Messiri", sans-serif', fontWeight: 700 }}>
+            <DialogTitle sx={{ pr: 6, ...wrapSx, fontFamily: '"El Messiri", sans-serif', fontWeight: 700 }}>
               {tr(open, "title", lang)}
               <IconButton onClick={() => setOpen(null)} sx={{ position: "absolute", top: 8, insetInlineEnd: 8 }} aria-label={t("common.close")}>
                 <CloseRoundedIcon />
@@ -110,6 +115,7 @@ export default function Patients() {
               <Box
                 sx={{
                   lineHeight: 1.9,
+                  ...wrapSx,
                   "& img": { maxWidth: "100%", height: "auto", borderRadius: 2, my: 2 },
                   "& h2, & h3": { fontFamily: '"El Messiri", sans-serif', mt: 3, mb: 1 },
                   "& p": { mb: 1.5 },
