@@ -17,6 +17,9 @@ import { useUI } from "../../context/UISettingsContext";
 import { useConfirm } from "../../context/ConfirmContext";
 import { tr } from "../../utils/tr";
 
+// يكسر الكلمات/الروابط الطويلة حتى لا يخرج النص عن حدود القائمة على الموبايل
+const wrapSx = { overflowWrap: "anywhere", wordBreak: "break-word" };
+
 const EMPTY = { kind: "TOPIC", title_ar: "", title_en: "", summary_ar: "", summary_en: "", body_ar: "", body_en: "" };
 
 export default function ManagePatients() {
@@ -142,22 +145,42 @@ export default function ManagePatients() {
         <Box>
           {items.map((it) => (
             <Accordion key={it.id} elevation={0} disableGutters>
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexGrow: 1, minWidth: 0 }}>
-                  <Chip size="small" color={it.kind === "FAQ" ? "secondary" : "primary"} label={it.kind === "FAQ" ? t("patients.faq") : t("patients.topics")} />
-                  <Typography fontWeight={600} noWrap>
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />} sx={{ "& .MuiAccordionSummary-content": { minWidth: 0 } }}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={{ xs: 0.75, sm: 1.5 }}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  sx={{ flexGrow: 1, minWidth: 0 }}
+                >
+                  <Chip size="small" color={it.kind === "FAQ" ? "secondary" : "primary"} label={it.kind === "FAQ" ? t("patients.faq") : t("patients.topics")} sx={{ flexShrink: 0, alignSelf: { xs: "flex-start", sm: "center" }, maxWidth: "100%" }} />
+                  <Typography
+                    fontWeight={600}
+                    sx={{
+                      minWidth: 0,
+                      lineHeight: 1.6,
+                      ...wrapSx,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
                     {tr(it, "title", lang)}
                   </Typography>
                 </Stack>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ ...wrapSx }}>
+                {/* العنوان كاملاً (قد يكون مختصراً في السطر أعلاه) */}
+                <Typography fontWeight={700} sx={{ mb: 1, ...wrapSx }}>
+                  {tr(it, "title", lang)}
+                </Typography>
                 {tr(it, "summary", lang) && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: "italic" }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontStyle: "italic", ...wrapSx }}>
                     {tr(it, "summary", lang)}
                   </Typography>
                 )}
                 <Box
-                  sx={{ "& img": { maxWidth: "100%", height: "auto", borderRadius: 1 }, mb: 2 }}
+                  sx={{ ...wrapSx, "& img": { maxWidth: "100%", height: "auto", borderRadius: 1 }, mb: 2 }}
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(tr(it, "body", lang) || "—") }}
                 />
                 <Button color="error" size="small" startIcon={<DeleteRoundedIcon />} onClick={() => remove(it.id)}>
