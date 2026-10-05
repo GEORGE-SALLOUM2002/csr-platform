@@ -12,10 +12,10 @@
     "patients": "Patients",
     "board": "Board",
     "contact": "Contact",
-    "about": "About",
     "dashboard": "Dashboard",
     "sections": "Sections",
-    "myAccount": "My account"
+    "myAccount": "My account",
+    "about": "About"
   },
   "common": {
     "search": "Search",
@@ -87,9 +87,8 @@
     "SEMINAR": "Seminar"
   },
   "home": {
-    "eyebrow": "An integrated scientific platform",
-    "heroTitle": "A scientific home for radiologists",
-    "heroLead": "Under one roof: a reference scientific library, a directory of member physicians, conference and event news, and a simple awareness portal for patients.",
+    "heroTitle": "Syrian Radiologists Community",
+    "heroLead": "This page features a specialized digital library of radiology resources, a directory of Community members and their subspecialties, information on the Community’s scientific and training activities, and a patient education section with clear, accessible information.",
     "browseLibrary": "Browse the library",
     "joinDoctor": "Join as a physician",
     "quickAccess": "Quick access",
@@ -98,8 +97,8 @@
     "statsPhysicians": "Member physicians",
     "statsResources": "Scientific resources",
     "statsEvents": "Conferences & events",
-    "aboutTitle": "A scientific society serving radiologists",
-    "aboutText": "The Radiology Association was founded to be a scientific reference and professional home for radiologists — advancing practice, supporting physicians, organizing conferences and spreading health awareness."
+    "aboutTitle": "About us",
+    "aboutText": "The Community of Syrian Radiologists was founded by a group of Syrian radiologists working in Syria and abroad to coordinate initiatives aimed at advancing radiology in Syria. Its scientific and professional activities include distance learning, local workshops, and scientific conferences in cities across Syria."
   },
   "library": {
     "title": "Electronic Library",

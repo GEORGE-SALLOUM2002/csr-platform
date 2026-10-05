@@ -10,22 +10,40 @@ export default function About() {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
-      <PageHeader eyebrow={t("nav.about")} title={t("home.aboutTitle")} />
+      <PageHeader title={t("home.aboutTitle")} />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.1fr 0.9fr" }, gap: { xs: 4, md: 6 }, alignItems: "center" }}>
         <Stack spacing={2.5}>
           <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.9 }}>
             {t("home.aboutText")}
           </Typography>
-          <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.9 }}>
+          <Typography color="text.secondary" sx={{ fontSize: "1.02rem", lineHeight: 1.9 }}>
             {lang === "ar"
-              ? "تعمل الجمعية على تطوير الممارسة العلمية في مجال الأشعة عبر تبنّي أحدث المعايير الطبية، ودعم الأطباء المنتسبين بالمصادر والمراجع، وتوفير بيئةٍ مهنية تُعزّز التعلّم المستمر وتبادل الخبرات بين الزملاء."
+              ? "الجمعية غير ربحية، وتعتمد على العمل التطوعي لأعضائها، وهي حاليا قيد التسجيل  رسمياً لدى الجهات المختصة في سوريا."
               : "The association advances scientific practice in radiology by adopting the latest medical standards, supporting affiliated physicians with resources and references, and fostering a professional environment that encourages continuous learning and the exchange of expertise among colleagues."}
           </Typography>
           <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.9 }}>
             {lang === "ar"
-              ? "كما تنظّم المؤتمرات والندوات وورش العمل العلمية، وتُعنى بنشر الوعي الصحي بين المرضى بلغةٍ مبسّطة وموثوقة، إيماناً منها بأنّ المعرفة الطبية رسالةٌ تُخدَم بها المهنة والمجتمع معاً."
-              : "It also organizes scientific conferences, seminars, and workshops, and is committed to spreading health awareness among patients in clear and trustworthy language, in the belief that medical knowledge is a mission that serves both the profession and the community."}
+              ? "تتمثل أهداف الجمعية في دعم التعليم والتدريب المهني لأطباء الأشعة والفنيين العاملين في مجالات الأشعة التشخيصية والتداخلية والطب النووي. وتقتصر أنشطتها على المجالين العلمي والمهني."
+              : "The Community’s objectives are to support education and professional training for radiologists and technologists working in diagnostic radiology, interventional radiology, and nuclear medicine. Its activities are exclusively scientific and professional."}
+          </Typography>
+                    <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.9 }}>
+            {lang === "ar"
+              ? "تأتي أنشطة الجمعية دعمًا للعملية التعليمية والتدريبية التي ترعاها المؤسسات الحكومية المحلية، ولا تُعدّ بديلاً عنها."
+              : "The Community’s activities complement the education and training provided by local government institutions and do not replace them."}
+          </Typography>          <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.9 }}>
+            {lang === "ar"
+              ? "تسعى الجمعية إلى أن تكون مجتمعاً مهنياً يجمع الزميلات والزملاء في اختصاص الأشعة، سواء الراغبين في المساهمة بجهودهم التطوعية أو الاستفادة من أنشطتها."
+              : "The Community aims to build a professional community that welcomes colleagues in radiology who wish to volunteer their expertise or benefit from its activities."}
+          </Typography>          <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.9 }}>
+            {lang === "ar"
+              ? "سيُفتح باب الانتساب إلى الجمعية بعد استكمال إجراءات التسجيل الرسمي، وسيعلن عن ذلك عبر موقعها الإلكتروني."
+              : "Membership will open once the formal registration process is complete. An announcement will be published on the Community’s website."}
+          </Typography>
+                    <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.9 }}>
+            {lang === "ar"
+              ? "إدارة جمعية أطباء الأشعة السوريين"
+              : "The Board of the Community of syrian Radiologists."}
           </Typography>
         </Stack>
         {/* شعار الجمعية (نفس شعار الصفحة الرئيسية) */}

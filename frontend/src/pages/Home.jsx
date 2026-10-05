@@ -107,22 +107,6 @@ export default function Home() {
             {/* النص */}
             <Box sx={{ textAlign: { xs: "center", md: "start" }, order: { xs: 2, md: 1 } }}>
               <Typography
-                sx={{
-                  display: "inline-block",
-                  color: "primary.main",
-                  bgcolor: (th) => `${th.palette.primary.main}14`,
-                  fontWeight: 700,
-                  fontSize: { xs: ".75rem", md: ".82rem" },
-                  letterSpacing: ".04em",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 5,
-                  mb: 2,
-                }}
-              >
-                {t("home.eyebrow")}
-              </Typography>
-              <Typography
                 variant="h2"
                 sx={{ fontWeight: 700, fontSize: { xs: "1.75rem", sm: "2.2rem", md: "3rem" }, lineHeight: 1.2, mb: 1.5 }}
               >
