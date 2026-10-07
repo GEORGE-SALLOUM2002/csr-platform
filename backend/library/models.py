@@ -62,7 +62,7 @@ class Resource(models.Model):
     resource_type = models.CharField("النوع", max_length=10, choices=Type.choices, default=Type.RESEARCH)
     file = models.FileField(
         "الملف (PDF)", upload_to="library/", blank=True, null=True,
-        validators=document_validators(20),
+        validators=document_validators(2000),
     )
 
     author = models.ForeignKey(

@@ -64,7 +64,7 @@ export default function Home() {
     ContentAPI.siteSettings().then((r) => setSettings(r.data)).catch(() => {});
     Promise.all([
       client.get("/doctors/"),
-      LibraryAPI.resources(),
+      LibraryAPI.resources({ status: "APPROVED" }), // المنشور فقط (حتى للمدير)
       ContentAPI.activities(),
     ])
       .then(([d, r, a]) => {

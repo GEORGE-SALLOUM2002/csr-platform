@@ -11,7 +11,8 @@ export function useFetch(fetcher, deps = []) {
     setError(false);
     Promise.resolve(fetcher())
       .then((res) => setData(res.data))
-      .catch(() => setError(true))
+      // نحفظ رمز حالة HTTP (مثل 404) إن وُجد لعرض رسالة مناسبة، وإلا true
+      .catch((err) => setError(err?.response?.status || true))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);

@@ -32,9 +32,9 @@ export const LibraryAPI = {
   deleteCategory: (id) => client.delete(`/categories/${id}/`),
   resources: (params) => client.get("/resources/", { params }),
   resource: (id) => client.get(`/resources/${id}/`),
-  create: (data) => client.post("/resources/", data, form),
+  create: (data, config = {}) => client.post("/resources/", data, { ...form, ...config }),
   mine: () => client.get("/resources/mine/"),
-  pending: () => client.get("/resources/pending/"),
+  pending: (params) => client.get("/resources/pending/", { params }),
   review: (id, action, reason = "") =>
     client.post(`/resources/${id}/review/`, { action, rejection_reason: reason }),
   remove: (id) => client.delete(`/resources/${id}/`),

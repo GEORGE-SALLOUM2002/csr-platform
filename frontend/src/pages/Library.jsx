@@ -4,17 +4,18 @@ import { Link as RouterLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Container, Box, Card, CardActionArea, CardContent, Typography, Chip, TextField,
-  MenuItem, InputAdornment, Stack,
+  MenuItem, InputAdornment, Stack, Pagination,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import { PageHeader, Loader, ErrorState, EmptyState } from "../components/ui";
 import { LibraryAPI } from "../api/services";
 import { asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
+import { fileKindInfo } from "../utils/fileKind";
 
 const TYPE_COLORS = { RESEARCH: "primary", LECTURE: "secondary", ARTICLE: "warning" };
+const PAGE_SIZE = 12; // يطابق PAGE_SIZE في إعدادات الخلفية
 
 export default function Library() {
   const { t } = useTranslation();
@@ -26,6 +27,8 @@ export default function Library() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     LibraryAPI.categories().then((r) => setCategories(asList(r.data))).catch(() => {});
@@ -35,16 +38,26 @@ export default function Library() {
     const timer = setTimeout(() => {
       setLoading(true);
       setError(false);
-      const params = {};
+      // المكتبة العامة تعرض المحتوى المعتمد فقط — حتى للمدير/المشرف
+      // (الخلفية تُرجع لهم كل الحالات، فبدون هذا يظهر المرفوض وكأنه منشور)
+      const params = { status: "APPROVED", page };
       if (search) params.search = search;
       if (type) params.resource_type = type;
       if (category) params.category = category;
       LibraryAPI.resources(params)
-        .then((r) => setItems(asList(r.data)))
+        .then((r) => {
+          setItems(asList(r.data));
+          setCount(Array.isArray(r.data) ? r.data.length : r.data?.count || 0);
+        })
         .catch(() => setError(true))
         .finally(() => setLoading(false));
     }, 350);
     return () => clearTimeout(timer);
+  }, [search, type, category, page]);
+
+  // العودة للصفحة الأولى عند تغيير البحث أو التصفية
+  useEffect(() => {
+    setPage(1);
   }, [search, type, category]);
 
   return (
@@ -88,12 +101,16 @@ export default function Library() {
                 <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, height: "100%" }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Chip label={t(`types.${r.resource_type}`)} color={TYPE_COLORS[r.resource_type]} size="small" />
-                    {r.file && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, color: "error.main" }}>
-                        <PictureAsPdfRoundedIcon fontSize="small" />
-                        <Typography variant="caption" fontWeight={700}>PDF</Typography>
-                      </Box>
-                    )}
+                    {r.file && (() => {
+                      const info = fileKindInfo(r.file, lang);
+                      const Icon = info.icon;
+                      return (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, color: info.color }}>
+                          <Icon fontSize="small" />
+                          <Typography variant="caption" fontWeight={700}>{info.label}</Typography>
+                        </Box>
+                      );
+                    })()}
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.05rem", lineHeight: 1.4 }}>
                     {tr(r, "title", lang)}
@@ -107,6 +124,20 @@ export default function Library() {
               </CardActionArea>
             </Card>
           ))}
+        </Box>
+      )}
+
+      {!loading && !error && count > PAGE_SIZE && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Pagination
+            count={Math.ceil(count / PAGE_SIZE)}
+            page={page}
+            onChange={(_, p) => {
+              setPage(p);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            color="primary"
+          />
         </Box>
       )}
     </Container>

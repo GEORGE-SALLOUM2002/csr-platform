@@ -10,7 +10,7 @@ from django.utils.deconstruct import deconstructible
 
 # امتدادات مسموح بها (صور / مستندات)
 IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "gif"]
-DOC_EXTS = ["pdf", "doc", "docx", "ppt", "pptx"]
+DOC_EXTS = ["pdf", "doc", "docx", "ppt", "pptx","mp4", "mp3", "wav",]
 # وثائق إثبات الطبيب: صورة أو PDF
 CREDENTIAL_EXTS = ["jpg", "jpeg", "png", "webp", "pdf"]
 

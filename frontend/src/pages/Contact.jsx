@@ -12,7 +12,7 @@ import { ContentAPI } from "../api/services";
 import { useUI } from "../context/UISettingsContext";
 
 // قيم افتراضية إن لم يضبط المدير إعدادات الموقع بعد
-const FALLBACK = { email: "info@radiology-assoc.org", phone: "+963 11 123 4567" };
+const FALLBACK = { email: "info@radiology-assoc.org", phone: "+963111234567" };
 const SOCIAL_KEYS = ["facebook", "twitter", "instagram", "youtube", "linkedin", "telegram", "whatsapp"];
 
 export default function Contact() {
@@ -33,7 +33,8 @@ export default function Contact() {
   const s = settings || {};
   const addr = (lang === "ar" ? s.address_ar : s.address_en) || s.address_ar || s.address_en || t("contact.addressValue");
   const emailVal = s.contact_email || FALLBACK.email;
-  const phoneVal = s.contact_phone || FALLBACK.phone;
+  // الرقم بدون فراغات حتى يظهر بالترتيب الصحيح ضمن الصفحة العربية
+  const phoneVal = (s.contact_phone || FALLBACK.phone).replace(/\s+/g, "");
   const hasSocial = SOCIAL_KEYS.some((k) => s[k]);
 
   const submit = (e) => {
@@ -60,7 +61,7 @@ export default function Contact() {
         {/* معلومات التواصل + روابط الجمعية */}
         <Stack spacing={2.5}>
           <ContactRow icon={<MailRoundedIcon />} label={t("contact.email")} value={emailVal} />
-          <ContactRow icon={<PhoneRoundedIcon />} label={t("contact.phone")} value={phoneVal} />
+          <ContactRow icon={<PhoneRoundedIcon />} label={t("contact.phone")} value={phoneVal} ltr />
           <ContactRow icon={<LocationOnRoundedIcon />} label={t("contact.address")} value={addr} />
           {hasSocial && (
             <>
@@ -95,7 +96,7 @@ export default function Contact() {
   );
 }
 
-function ContactRow({ icon, label, value }) {
+function ContactRow({ icon, label, value, ltr = false }) {
   return (
     <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
       <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: "action.hover", color: "primary.main", display: "grid", placeItems: "center", flexShrink: 0 }}>
@@ -103,7 +104,9 @@ function ContactRow({ icon, label, value }) {
       </Box>
       <Box>
         <Typography variant="body2" color="text.secondary">{label}</Typography>
-        <Typography fontWeight={600} sx={{ wordBreak: "break-word" }}>{value}</Typography>
+        <Typography fontWeight={600} sx={{ wordBreak: "break-word" }}>
+          {ltr ? <bdi dir="ltr">{value}</bdi> : value}
+        </Typography>
       </Box>
     </Box>
   );

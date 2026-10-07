@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Container, Box, Card, CardContent, TextField, MenuItem, Button, Typography, Alert, Stack, CircularProgress, Divider,
+  LinearProgress,
 } from "@mui/material";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import { PageHeader } from "../../components/ui";
@@ -13,6 +14,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useUI } from "../../context/UISettingsContext";
 import { useConfirm } from "../../context/ConfirmContext";
 import { tr } from "../../utils/tr";
+import { ALLOWED_EXTS, ACCEPT_ATTR, MAX_FILE_MB, fileExt, fileKindInfo } from "../../utils/fileKind";
 
 const TYPES = ["RESEARCH", "LECTURE", "ARTICLE"];
 const EMPTY = {
@@ -35,6 +37,8 @@ export default function UploadResource() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const [progress, setProgress] = useState(0);
   const [formKey, setFormKey] = useState(0); // لإعادة تهيئة المحرّرات بعد الإرسال
 
   useEffect(() => {
@@ -45,6 +49,31 @@ export default function UploadResource() {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const setHtml = (k) => (html) => setForm((f) => ({ ...f, [k]: html }));
 
+  // التحقق من نوع وحجم الملف المرفق قبل الرفع (نفس قواعد الخلفية)
+  const onPickFile = (e) => {
+    const f = e.target.files?.[0] || null;
+    e.target.value = ""; // للسماح بإعادة اختيار الملف نفسه
+    setFileError("");
+    if (!f) return;
+    if (!ALLOWED_EXTS.includes(fileExt(f.name))) {
+      setFile(null);
+      setFileError(ar(
+        `نوع الملف «${f.name}» غير مسموح. المسموح: ${ALLOWED_EXTS.join("، ").toUpperCase()}.`,
+        `File "${f.name}" type not allowed. Allowed: ${ALLOWED_EXTS.join(", ").toUpperCase()}.`
+      ));
+      return;
+    }
+    if (f.size > MAX_FILE_MB * 1024 * 1024) {
+      setFile(null);
+      setFileError(ar(
+        `حجم الملف يتجاوز الحد الأقصى (${MAX_FILE_MB} ميغابايت).`,
+        `File exceeds the maximum size (${MAX_FILE_MB} MB).`
+      ));
+      return;
+    }
+    setFile(f);
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!(await confirm({
@@ -54,6 +83,7 @@ export default function UploadResource() {
     setSubmitting(true);
     setSuccess(false);
     setError(false);
+    setProgress(0);
     try {
       const fd = new FormData();
       fd.append("title_ar", form.title_ar);
@@ -65,14 +95,26 @@ export default function UploadResource() {
       fd.append("resource_type", form.resource_type);
       fd.append("category", form.category);
       if (file) fd.append("file", file);
-      await LibraryAPI.create(fd);
+      await LibraryAPI.create(fd, {
+        onUploadProgress: (ev) => ev.total && setProgress(Math.round((ev.loaded * 100) / ev.total)),
+      });
       setSuccess(true);
       setForm(EMPTY);
       setFile(null);
       setFormKey((k) => k + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
-      setError(true);
+    } catch (err) {
+      // عرض رسالة الخلفية إن وُجدت (مثل رفض نوع/حجم الملف)، وإلا رسالة عامة
+      const d = err?.response?.data;
+      const status = err?.response?.status;
+      let msg = "";
+      if (status === 413) {
+        msg = ar("حجم الملف أكبر من المسموح به على الخادم.", "The file is larger than the server allows.");
+      } else if (d && typeof d === "object") {
+        const first = Object.values(d).flat().find((v) => typeof v === "string");
+        if (first) msg = first;
+      }
+      setError(msg || true);
     } finally {
       setSubmitting(false);
     }
@@ -90,7 +132,7 @@ export default function UploadResource() {
             <Box component="form" onSubmit={onSubmit}>
               <Stack spacing={2.5}>
                 {success && <Alert severity="success">{t("dashboard.uploadSuccess")}</Alert>}
-                {error && <Alert severity="error">{t("common.error")}</Alert>}
+                {error && <Alert severity="error">{typeof error === "string" ? error : t("common.error")}</Alert>}
 
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
                   <TextField label={t("dashboard.title_ar")} value={form.title_ar} onChange={set("title_ar")} required fullWidth />
@@ -154,14 +196,41 @@ export default function UploadResource() {
                 </Box>
 
                 <Box>
-                  <Button component="label" variant="outlined" startIcon={<UploadFileRoundedIcon />}>
-                    {lang === "ar" ? "ملف PDF (اختياري)" : "PDF file (optional)"}
-                    <input hidden type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                  <Button component="label" variant="outlined" startIcon={<UploadFileRoundedIcon />} disabled={submitting}>
+                    {ar("رفع ملفات مرفقة", "Upload attachments")}
+                    <input hidden type="file" accept={ACCEPT_ATTR} onChange={onPickFile} />
                   </Button>
-                  {file && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {file.name}
-                    </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
+                    {ar(
+                      `اختياري — ملف واحد: PDF، Word، PowerPoint، فيديو MP4، صوت MP3/WAV (حتى ${MAX_FILE_MB} ميغابايت).`,
+                      `Optional — one file: PDF, Word, PowerPoint, MP4 video, MP3/WAV audio (up to ${MAX_FILE_MB} MB).`
+                    )}
+                  </Typography>
+                  {file && (() => {
+                    const info = fileKindInfo(file.name, lang);
+                    const Icon = info.icon;
+                    return (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1, flexWrap: "wrap" }}>
+                        <Icon fontSize="small" sx={{ color: info.color }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
+                          {file.name} — {(file.size / (1024 * 1024)).toFixed(1)} MB
+                        </Typography>
+                        {!submitting && (
+                          <Button size="small" color="error" onClick={() => setFile(null)}>
+                            {ar("إزالة", "Remove")}
+                          </Button>
+                        )}
+                      </Box>
+                    );
+                  })()}
+                  {fileError && <Alert severity="error" sx={{ mt: 1 }}>{fileError}</Alert>}
+                  {submitting && file && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <LinearProgress variant="determinate" value={progress} />
+                      <Typography variant="caption" color="text.secondary">
+                        {ar(`جارٍ الرفع… ${progress}%`, `Uploading… ${progress}%`)}
+                      </Typography>
+                    </Box>
                   )}
                 </Box>
 

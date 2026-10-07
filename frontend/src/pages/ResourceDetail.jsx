@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useParams, Link as RouterLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Container, Box, Typography, Chip, Button, Stack, Divider } from "@mui/material";
+import { Container, Box, Typography, Chip, Button, Stack, Divider, Alert } from "@mui/material";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -14,6 +14,8 @@ import { useUI } from "../context/UISettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useConfirm } from "../context/ConfirmContext";
 import { tr } from "../utils/tr";
+import { fileKindInfo } from "../utils/fileKind";
+import { useFileExists } from "../hooks/useFileExists";
 
 const TYPE_COLORS = { RESEARCH: "primary", LECTURE: "secondary", ARTICLE: "warning" };
 
@@ -27,6 +29,7 @@ export default function ResourceDetail() {
   const [busy, setBusy] = useState(false);
   const { data, loading, error, reload } = useFetch(() => LibraryAPI.resource(id), [id]);
   const ar = (a, e) => (lang === "ar" ? a : e);
+  const fileExists = useFileExists(data?.file);
 
   const canDelete = !!user && (isAdmin || isEditor || user.id === data?.author);
 
@@ -40,12 +43,33 @@ export default function ResourceDetail() {
     try {
       await LibraryAPI.remove(id);
       navigate("/library");
+    } catch (err) {
+      // محذوف مسبقاً: نعود للمكتبة مباشرة
+      if (err?.response?.status === 404) navigate("/library");
     } finally {
       setBusy(false);
     }
   };
 
   if (loading) return <Loader />;
+  // المحتوى حُذف من قاعدة البيانات لكنه ما زال ظاهراً في قائمة قديمة
+  if (error === 404) {
+    return (
+      <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 } }}>
+        <Alert
+          severity="warning"
+          action={
+            <Button color="inherit" size="small" component={RouterLink} to="/library">
+              {ar("العودة للمكتبة", "Back to library")}
+            </Button>
+          }
+        >
+          {ar("هذا المحتوى لم يعد متوفراً — ربما تم حذفه أو إلغاء نشره.",
+              "This content is no longer available — it may have been deleted or unpublished.")}
+        </Alert>
+      </Container>
+    );
+  }
   if (error || !data) return <ErrorState onRetry={reload} />;
 
   const summary = tr(data, "description", lang);
@@ -64,6 +88,19 @@ export default function ResourceDetail() {
           </Button>
         )}
       </Box>
+
+      {data.status && data.status !== "APPROVED" && (
+        <Alert severity={data.status === "REJECTED" ? "error" : "warning"} sx={{ mb: 2 }}>
+          {data.status === "REJECTED"
+            ? ar("هذا المحتوى مرفوض وغير ظاهر للزوار في المكتبة.", "This content was rejected and is hidden from visitors.")
+            : ar("هذا المحتوى بانتظار المراجعة وغير ظاهر للزوار بعد.", "This content is pending review and not yet visible to visitors.")}
+          {data.status === "REJECTED" && data.rejection_reason && (
+            <Box component="span" sx={{ display: "block", mt: 0.5 }}>
+              {ar("سبب الرفض: ", "Reason: ")}{data.rejection_reason}
+            </Box>
+          )}
+        </Alert>
+      )}
 
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <Chip label={t(`types.${data.resource_type}`)} color={TYPE_COLORS[data.resource_type]} />
@@ -102,11 +139,37 @@ export default function ResourceDetail() {
         !summary && <Typography sx={{ mb: 4 }}>—</Typography>
       )}
 
-      {data.file ? (
-        <Button variant="contained" size="large" startIcon={<DownloadRoundedIcon />} href={data.file} target="_blank" rel="noopener">
-          {t("common.download")} ({t("common.pdf")})
-        </Button>
-      ) : (
+      {data.file && fileExists === false ? (
+        <Alert severity="warning">
+          {ar("الملف المرفق بهذا المحتوى غير متوفر حالياً — ربما تم حذفه من الخادم.",
+              "The attached file is no longer available — it may have been removed from the server.")}
+        </Alert>
+      ) : data.file ? (() => {
+        const info = fileKindInfo(data.file, lang);
+        return (
+          <Stack spacing={2}>
+            {/* تشغيل الفيديو/الصوت مباشرة داخل الصفحة */}
+            {info.kind === "video" && (
+              <Box
+                component="video"
+                src={data.file}
+                controls
+                preload="metadata"
+                playsInline
+                sx={{ width: "100%", maxHeight: 520, borderRadius: 2, bgcolor: "#000" }}
+              />
+            )}
+            {info.kind === "audio" && (
+              <Box component="audio" src={data.file} controls preload="metadata" sx={{ width: "100%" }} />
+            )}
+            <Box>
+              <Button variant="contained" size="large" startIcon={<DownloadRoundedIcon />} href={data.file} target="_blank" rel="noopener">
+                {t("common.download")} ({info.label})
+              </Button>
+            </Box>
+          </Stack>
+        );
+      })() : (
         <Typography color="text.secondary">{t("library.noFile")}</Typography>
       )}
     </Container>
