@@ -14,10 +14,17 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "contact_email", "contact_phone", "address_ar", "address_en", "map_url",
             "facebook", "twitter", "instagram", "youtube", "linkedin", "telegram", "whatsapp",
-            "require_review",
+            "require_review", "show_view_counts",
             "updated_at",
         ]
         read_only_fields = ["updated_at"]
+
+    def validate(self, attrs):
+        # إظهار/إخفاء عدد المشاهدات قرار المدير وحده
+        request = self.context.get("request")
+        if "show_view_counts" in attrs and not (request and request.user.is_authenticated and request.user.is_admin):
+            attrs.pop("show_view_counts")
+        return attrs
 
 
 class NewsSerializer(serializers.ModelSerializer):

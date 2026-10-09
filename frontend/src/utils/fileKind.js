@@ -1,7 +1,7 @@
 /**
  * تحديد نوع الملف المرفق (PDF / فيديو / صوت / مستند / عرض تقديمي) من رابطه أو اسمه،
  * مع الأيقونة والتسمية المناسبة — لعرض المرفقات بشكل صحيح في كل الصفحات.
- * الامتدادات مطابقة لـ DOC_EXTS في backend/config/validators.py.
+ * امتدادات رفع المحتوى العلمي مطابقة لـ RESOURCE_EXTS في backend/config/validators.py.
  */
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import MovieRoundedIcon from "@mui/icons-material/MovieRounded";
@@ -10,8 +10,10 @@ import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import SlideshowRoundedIcon from "@mui/icons-material/SlideshowRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
 
-// الامتدادات المسموح بها للرفع (يجب أن تطابق الخلفية)
-export const ALLOWED_EXTS = ["pdf", "doc", "docx", "ppt", "pptx", "mp4", "mp3", "wav"];
+// الامتدادات المسموح بها لرفع المحتوى العلمي (يجب أن تطابق الخلفية).
+// المحتوى يُعرض داخل الموقع فقط بلا تحميل، لذا نقبل ما يستطيع المتصفح عرضه؛
+// ملفات Word/PowerPoint تُحوَّل إلى PDF قبل الرفع.
+export const ALLOWED_EXTS = ["pdf", "mp4", "mp3", "wav"];
 export const ACCEPT_ATTR = ALLOWED_EXTS.map((e) => `.${e}`).join(",");
 // الحد الأقصى للحجم (يطابق document_validators(2000) لحقل ملف المورد)
 export const MAX_FILE_MB = 2000;
@@ -50,4 +52,10 @@ export function fileKindInfo(src, lang = "ar") {
   const kind = fileKind(src);
   const k = KINDS[kind];
   return { kind, icon: k.icon, color: k.color, label: lang === "ar" ? k.ar : k.en };
+}
+
+/** معلومات العرض لملف مورد علمي — الخلفية لا تُرسل رابط الملف، بل امتداده فقط (file_ext). */
+export function resourceFileInfo(resource, lang = "ar") {
+  const ext = resource?.file_ext;
+  return ext ? fileKindInfo(`.${ext}`, lang) : null;
 }

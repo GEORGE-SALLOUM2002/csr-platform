@@ -41,5 +41,14 @@ def document_validators(max_mb=20):
     return [FileSizeValidator(max_mb), FileExtensionValidator(DOC_EXTS)]
 
 
+# ملفات المحتوى العلمي: تُعرض داخل الموقع فقط (بلا تحميل)، لذا نقبل الأنواع
+# التي يستطيع المتصفح عرضها: PDF + فيديو/صوت. (Word/PowerPoint تُحوَّل إلى PDF قبل الرفع)
+RESOURCE_EXTS = ["pdf", "mp4", "mp3", "wav"]
+
+
+def resource_validators(max_mb=2000):
+    return [FileSizeValidator(max_mb), FileExtensionValidator(RESOURCE_EXTS)]
+
+
 def credential_validators(max_mb=5):
     return [FileSizeValidator(max_mb), FileExtensionValidator(CREDENTIAL_EXTS)]

@@ -1,15 +1,19 @@
 """واجهات المحتوى العام."""
-from django.db.models import Q
+from datetime import timedelta
+
+from django.db.models import F, Q, Sum
 from django.utils import timezone
 from rest_framework import viewsets, permissions, generics
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes, throttle_classes
+from config.throttles import StatsThrottle
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 
-from accounts.permissions import ReadOnlyOrEditor, ReadOnlyOrAdmin, IsEditorOrAdmin
+from accounts.permissions import ReadOnlyOrEditor, ReadOnlyOrAdmin, IsEditorOrAdmin, IsAdmin
+from library.models import Resource
 from .models import (
     News, Activity, ActivityFile, BoardMember,
-    SmartAnnouncement, PatientTopic, ContactMessage, SiteSettings,
+    SmartAnnouncement, PatientTopic, ContactMessage, SiteSettings, DailyVisit,
 )
 from .serializers import (
     NewsSerializer, ActivitySerializer, ActivityFileSerializer, BoardMemberSerializer,
@@ -133,3 +137,64 @@ class SiteSettingsView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return SiteSettings.load()
+
+
+# ============================ الإحصاءات ============================
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([StatsThrottle])
+def record_visit(request):
+    """تسجيل زيارة للموقع (تستدعيها الواجهة مرة واحدة لكل جلسة متصفح)."""
+    today = timezone.localdate()
+    obj, created = DailyVisit.objects.get_or_create(date=today, defaults={"count": 1})
+    if not created:
+        DailyVisit.objects.filter(pk=obj.pk).update(count=F("count") + 1)
+    return Response(status=204)
+
+
+@api_view(["GET"])
+@permission_classes([IsAdmin])
+def site_stats(request):
+    """إحصاءات المدير: الزيارات + مشاهدات الفيديو والضغطات على روابطه."""
+    today = timezone.localdate()
+
+    def visits_since(days):
+        start = today - timedelta(days=days - 1)
+        return DailyVisit.objects.filter(date__gte=start).aggregate(n=Sum("count"))["n"] or 0
+
+    start30 = today - timedelta(days=29)
+    by_day = dict(DailyVisit.objects.filter(date__gte=start30).values_list("date", "count"))
+    daily = [
+        {"date": (start30 + timedelta(days=i)).isoformat(), "count": by_day.get(start30 + timedelta(days=i), 0)}
+        for i in range(30)
+    ]
+
+    videos = (
+        Resource.objects.filter(Q(video_url__gt="") | Q(view_count__gt=0) | Q(click_count__gt=0))
+        .select_related("author")
+        .order_by("-view_count", "-click_count")[:100]
+    )
+    totals = Resource.objects.aggregate(views=Sum("view_count"), clicks=Sum("click_count"))
+    return Response({
+        "visits": {
+            "today": visits_since(1),
+            "last_7": visits_since(7),
+            "last_30": visits_since(30),
+            "total": DailyVisit.objects.aggregate(n=Sum("count"))["n"] or 0,
+            "daily": daily,
+        },
+        "videos": {
+            "total_views": totals["views"] or 0,
+            "total_clicks": totals["clicks"] or 0,
+            "items": [
+                {
+                    "id": r.id, "title_ar": r.title_ar, "title_en": r.title_en,
+                    "author_name": r.author.full_name, "status": r.status,
+                    "video_url": r.video_url, "has_file": bool(r.file),
+                    "view_count": r.view_count, "click_count": r.click_count,
+                }
+                for r in videos
+            ],
+        },
+        "show_view_counts": SiteSettings.load().show_view_counts,
+    })

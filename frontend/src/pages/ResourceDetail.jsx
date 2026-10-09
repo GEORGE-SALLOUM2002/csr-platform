@@ -1,9 +1,8 @@
-/** تفاصيل مورد علمي مع زر التنزيل. */
+/** تفاصيل مورد علمي — الملفات تُعرض داخل الصفحة فقط (التحميل ممنوع). */
 import { useState } from "react";
 import { useParams, Link as RouterLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Container, Box, Typography, Chip, Button, Stack, Divider, Alert } from "@mui/material";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import DOMPurify from "dompurify";
@@ -14,8 +13,9 @@ import { useUI } from "../context/UISettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useConfirm } from "../context/ConfirmContext";
 import { tr } from "../utils/tr";
-import { fileKindInfo } from "../utils/fileKind";
 import { useFileExists } from "../hooks/useFileExists";
+import VideoPlayer from "../components/VideoPlayer";
+import ResourceFile from "../components/ResourceFile";
 
 const TYPE_COLORS = { RESEARCH: "primary", LECTURE: "secondary", ARTICLE: "warning" };
 
@@ -29,7 +29,7 @@ export default function ResourceDetail() {
   const [busy, setBusy] = useState(false);
   const { data, loading, error, reload } = useFetch(() => LibraryAPI.resource(id), [id]);
   const ar = (a, e) => (lang === "ar" ? a : e);
-  const fileExists = useFileExists(data?.file);
+  const fileExists = useFileExists(data?.stream_url);
 
   const canDelete = !!user && (isAdmin || isEditor || user.id === data?.author);
 
@@ -136,41 +136,32 @@ export default function ResourceDetail() {
           dangerouslySetInnerHTML={{ __html: safeContent }}
         />
       ) : (
-        !summary && <Typography sx={{ mb: 4 }}>—</Typography>
+        !summary && !data.video_url && !data.stream_url && <Typography sx={{ mb: 4 }}>—</Typography>
       )}
 
-      {data.file && fileExists === false ? (
+      {/* فيديو برابط خارجي (YouTube / Microsoft) يُعرض داخل الموقع */}
+      {data.video_url && (
+        <Box sx={{ mb: 3 }}>
+          <VideoPlayer
+            resourceId={data.id}
+            videoUrl={data.video_url}
+            views={data.view_count}
+            clicks={data.click_count}
+            lang={lang}
+          />
+        </Box>
+      )}
+
+      {data.stream_url && fileExists === false ? (
         <Alert severity="warning">
           {ar("الملف المرفق بهذا المحتوى غير متوفر حالياً — ربما تم حذفه من الخادم.",
               "The attached file is no longer available — it may have been removed from the server.")}
         </Alert>
-      ) : data.file ? (() => {
-        const info = fileKindInfo(data.file, lang);
-        return (
-          <Stack spacing={2}>
-            {/* تشغيل الفيديو/الصوت مباشرة داخل الصفحة */}
-            {info.kind === "video" && (
-              <Box
-                component="video"
-                src={data.file}
-                controls
-                preload="metadata"
-                playsInline
-                sx={{ width: "100%", maxHeight: 520, borderRadius: 2, bgcolor: "#000" }}
-              />
-            )}
-            {info.kind === "audio" && (
-              <Box component="audio" src={data.file} controls preload="metadata" sx={{ width: "100%" }} />
-            )}
-            <Box>
-              <Button variant="contained" size="large" startIcon={<DownloadRoundedIcon />} href={data.file} target="_blank" rel="noopener">
-                {t("common.download")} ({info.label})
-              </Button>
-            </Box>
-          </Stack>
-        );
-      })() : (
-        <Typography color="text.secondary">{t("library.noFile")}</Typography>
+      ) : data.stream_url ? (
+        // عرض داخل الموقع فقط — لا يوجد زر تحميل
+        <ResourceFile resource={data} lang={lang} views={data.video_url ? null : data.view_count} />
+      ) : (
+        !data.video_url && <Typography color="text.secondary">{t("library.noFile")}</Typography>
       )}
     </Container>
   );

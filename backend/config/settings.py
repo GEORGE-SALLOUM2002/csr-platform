@@ -147,6 +147,8 @@ PRIVATE_MEDIA_ROOT = Path(os.getenv("PRIVATE_MEDIA_ROOT", str(BASE_DIR / "privat
 
 # مدّة صلاحية رابط تنزيل الوثيقة (بالثواني) — افتراضياً ساعة واحدة
 CREDENTIAL_URL_MAX_AGE = int(os.getenv("CREDENTIAL_URL_MAX_AGE", "3600"))
+# صلاحية رابط عرض ملفات المحتوى العلمي (ثوانٍ) — يكفي لمشاهدة محاضرة طويلة كاملة
+RESOURCE_STREAM_MAX_AGE = int(os.getenv("RESOURCE_STREAM_MAX_AGE", str(6 * 3600)))
 
 # ------------------------- التخزين (Django 5 STORAGES) -------------------------
 STORAGES = {
@@ -192,6 +194,8 @@ REST_FRAMEWORK = {
         "login": os.getenv("THROTTLE_LOGIN", "5/min"),
         "register": os.getenv("THROTTLE_REGISTER", "10/hour"),
         "password_reset": os.getenv("THROTTLE_PASSWORD_RESET", "5/hour"),
+        # عدّادات الزيارات والمشاهدات (لمنع التضخيم المتعمّد)
+        "stats": os.getenv("THROTTLE_STATS", "60/min"),
     },
 }
 

@@ -1,5 +1,7 @@
 /** تعريف كل مسارات التطبيق داخل التخطيط ذي الشريط الجانبي. */
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
+import { trackVisit } from "./utils/track";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -40,11 +42,15 @@ import ManagePatients from "./pages/dashboard/ManagePatients";
 import ManageActivities from "./pages/dashboard/ManageActivities";
 import ManageSiteSettings from "./pages/dashboard/ManageSiteSettings";
 import ManageCategories from "./pages/dashboard/ManageCategories";
+import SiteStats from "./pages/dashboard/SiteStats";
 
 const STAFF = ["EDITOR", "ADMIN"];
 const CONTRIB = ["DOCTOR", "EDITOR", "ADMIN"];
 
 export default function App() {
+  // احتساب زيارة واحدة لكل جلسة متصفح
+  useEffect(() => { trackVisit(); }, []);
+
   return (
     <Routes>
       <Route element={<Layout />}>
@@ -80,6 +86,7 @@ export default function App() {
         <Route path="dashboard/announcements" element={<ProtectedRoute roles={STAFF}><ManageAnnouncements /></ProtectedRoute>} />
         <Route path="dashboard/accounts" element={<ProtectedRoute roles={STAFF}><ManageAccounts /></ProtectedRoute>} />
         <Route path="dashboard/members" element={<ProtectedRoute roles={["ADMIN"]}><ManageMembers /></ProtectedRoute>} />
+        <Route path="dashboard/stats" element={<ProtectedRoute roles={["ADMIN"]}><SiteStats /></ProtectedRoute>} />
         <Route path="dashboard/editors" element={<ProtectedRoute roles={["ADMIN"]}><ManageEditors /></ProtectedRoute>} />
         <Route path="dashboard/patients" element={<ProtectedRoute roles={STAFF}><ManagePatients /></ProtectedRoute>} />
         <Route path="dashboard/activities" element={<ProtectedRoute roles={STAFF}><ManageActivities /></ProtectedRoute>} />

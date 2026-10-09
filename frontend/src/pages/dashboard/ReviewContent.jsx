@@ -9,7 +9,6 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { Link as RouterLink } from "react-router-dom";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DOMPurify from "dompurify";
@@ -19,7 +18,8 @@ import { LibraryAPI } from "../../api/services";
 import { useUI } from "../../context/UISettingsContext";
 import { useConfirm } from "../../context/ConfirmContext";
 import { tr } from "../../utils/tr";
-import { fileKindInfo } from "../../utils/fileKind";
+import { resourceFileInfo } from "../../utils/fileKind";
+import ResourceFile from "../../components/ResourceFile";
 import { useFileExists } from "../../hooks/useFileExists";
 
 export default function ReviewContent() {
@@ -45,7 +45,7 @@ export default function ReviewContent() {
   const [reason, setReason] = useState("");
   const [preview, setPreview] = useState(null); // المورد المعروض في نافذة المعاينة
   const [actionError, setActionError] = useState("");
-  const previewFileExists = useFileExists(preview?.file);
+  const previewFileExists = useFileExists(preview?.stream_url);
 
   // عند فشل الاعتماد/الرفض: رسالة واضحة (خاصة إن كان المحتوى محذوفاً)
   const onActionError = (err) => {
@@ -165,7 +165,7 @@ export default function ReviewContent() {
                 <Box sx={{ minWidth: 0 }}>
                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }} flexWrap="wrap" useFlexGap>
                     <Chip label={t(`types.${item.resource_type}`)} size="small" color="primary" />
-                    {item.file && <Chip label={fileKindInfo(item.file, lang).label} size="small" variant="outlined" />}
+                    {item.file_ext && <Chip label={resourceFileInfo(item, lang).label} size="small" variant="outlined" />}
                     <Typography variant="body2" color="text.secondary">
                       {t("common.by")} {item.author_name}
                     </Typography>
@@ -246,57 +246,15 @@ export default function ReviewContent() {
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                 {ar("الملف المرفق", "Attached file")}
               </Typography>
-              {preview.file && previewFileExists === false ? (
+              {preview.stream_url && previewFileExists === false ? (
                 <Alert severity="warning">
                   {ar("الملف المرفق غير متوفر على الخادم — ربما تم حذفه.",
                       "The attached file is not available on the server — it may have been deleted.")}
                 </Alert>
-              ) : preview.file ? (() => {
-                const kind = fileKindInfo(preview.file, lang).kind;
-                return (
-                <Stack spacing={1.5}>
-                  {kind === "pdf" && (
-                    <Box
-                      component="iframe"
-                      src={preview.file}
-                      title={ar("معاينة ملف PDF", "PDF preview")}
-                      sx={{
-                        width: "100%",
-                        height: { xs: 360, md: 560 },
-                        border: 1,
-                        borderColor: "divider",
-                        borderRadius: 1,
-                        bgcolor: "#fff",
-                      }}
-                    />
-                  )}
-                  {kind === "video" && (
-                    <Box
-                      component="video"
-                      src={preview.file}
-                      controls
-                      preload="metadata"
-                      playsInline
-                      sx={{ width: "100%", maxHeight: 480, borderRadius: 1, bgcolor: "#000" }}
-                    />
-                  )}
-                  {kind === "audio" && (
-                    <Box component="audio" src={preview.file} controls preload="metadata" sx={{ width: "100%" }} />
-                  )}
-                  <Box>
-                    <Button variant="outlined" startIcon={<DownloadRoundedIcon />} href={preview.file} target="_blank" rel="noopener">
-                      {ar("فتح الملف في تبويب جديد", "Open file in a new tab")}
-                    </Button>
-                    {kind !== "doc" && kind !== "slides" && kind !== "other" && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                      {ar("إن لم تظهر المعاينة أعلاه (أثناء التطوير المحلّي)، افتح الملف في تبويب جديد لمراجعته.",
-                          "If the preview above doesn't load (in local development), open the file in a new tab to review it.")}
-                    </Typography>
-                    )}
-                  </Box>
-                </Stack>
-                );
-              })() : (
+              ) : preview.stream_url ? (
+                // معاينة داخل الصفحة فقط — التحميل ممنوع للجميع
+                <ResourceFile resource={preview} lang={lang} />
+              ) : (
                 <Typography color="text.secondary">{t("library.noFile")}</Typography>
               )}
             </DialogContent>

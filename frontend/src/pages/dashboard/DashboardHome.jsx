@@ -12,6 +12,7 @@ import ArticleRoundedIcon from "@mui/icons-material/ArticleRounded";
 import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
 import { PageHeader } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
 
@@ -31,6 +32,7 @@ const ADMIN_CARDS = [
   ...EDITOR_CARDS,
   { to: "/dashboard/accounts", key: "accounts", Icon: ManageAccountsRoundedIcon },
   { to: "/dashboard/members", key: "members", Icon: GroupsRoundedIcon },
+  { to: "/dashboard/stats", key: "stats", Icon: InsightsRoundedIcon },
 ];
 
 const CARDS_BY_ROLE = { DOCTOR: DOCTOR_CARDS, EDITOR: EDITOR_CARDS, ADMIN: ADMIN_CARDS };

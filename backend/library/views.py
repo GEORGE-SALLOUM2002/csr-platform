@@ -1,5 +1,12 @@
 """واجهات المكتبة: التصنيفات + الموارد العلمية مع سير الاعتماد."""
-from django.db.models import Q
+import mimetypes
+import re
+
+from django.conf import settings
+from django.core.signing import BadSignature, SignatureExpired
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseForbidden, StreamingHttpResponse
+from django.shortcuts import get_object_or_404
+from django.db.models import F, Q
 from django.utils import timezone
 
 from content.models import SiteSettings
@@ -8,10 +15,39 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
+from config.throttles import StatsThrottle
 
 from accounts.permissions import ReadOnlyOrEditor, IsAuthorOrStaffOrReadOnly, IsEditorOrAdmin
 from .models import Category, Resource
-from .serializers import CategorySerializer, ResourceSerializer, ResourceReviewSerializer
+from .serializers import CategorySerializer, ResourceSerializer, ResourceReviewSerializer, stream_signer
+
+_RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)")
+_CHUNK = 512 * 1024
+
+
+def _iter_file(fh, start, length):
+    """قراءة جزء من الملف على دفعات ثم إغلاقه."""
+    try:
+        fh.seek(start)
+        remaining = length
+        while remaining > 0:
+            data = fh.read(min(_CHUNK, remaining))
+            if not data:
+                break
+            remaining -= len(data)
+            yield data
+    finally:
+        fh.close()
+
+
+def _protect(resp):
+    """رؤوس تمنع التخزين والحفظ كمرفق وتمنع تضمين الملف في مواقع أخرى."""
+    resp["Content-Disposition"] = "inline"
+    resp["Cache-Control"] = "private, no-store, max-age=0"
+    resp["X-Content-Type-Options"] = "nosniff"
+    resp["Cross-Origin-Resource-Policy"] = "same-origin"
+    resp["Accept-Ranges"] = "bytes"
+    return resp
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -99,3 +135,71 @@ class ResourceViewSet(viewsets.ModelViewSet):
             resource.reject(request.user, ser.validated_data.get("rejection_reason", ""))
             msg = "تم رفض المحتوى."
         return Response({"detail": msg, "resource": ResourceSerializer(resource, context={"request": request}).data})
+
+    @action(
+        detail=True, methods=["post"], permission_classes=[permissions.AllowAny],
+        throttle_classes=[StatsThrottle],
+    )
+    def track(self, request, pk=None):
+        """تسجيل مشاهدة فيديو (view) أو ضغطة على رابط الفيديو (click) — متاح للجميع."""
+        field = {"view": "view_count", "click": "click_count"}.get(request.data.get("event"))
+        if not field:
+            return Response({"detail": "event يجب أن يكون view أو click."}, status=http_status.HTTP_400_BAD_REQUEST)
+        resource = self.get_object()  # يحترم قواعد الظهور (المعتمد فقط للزوار)
+        Resource.objects.filter(pk=resource.pk).update(**{field: F(field) + 1})
+        return Response(status=http_status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny], authentication_classes=[])
+    def stream(self, request, pk=None):
+        """عرض ملف المورد داخل الموقع فقط (منع التحميل).
+
+        - الملف لا يُخدَم من /media/ إطلاقاً؛ الوصول الوحيد عبر هذا الرابط الموقّع
+          محدود الصلاحية (يُولَّد ضمن بيانات المورد لمن يحق له رؤيته).
+        - يُرفض فتح الرابط مباشرةً في المتصفح (شريط العنوان/تبويب جديد)؛ يعمل فقط
+          من داخل مشغّل الفيديو/الصوت وعارض PDF في صفحات الموقع.
+        - يدعم طلبات Range لتقديم/تأخير الفيديو.
+        """
+        try:
+            value = stream_signer().unsign(request.GET.get("sig", ""), max_age=settings.RESOURCE_STREAM_MAX_AGE)
+        except SignatureExpired:
+            return HttpResponseForbidden("انتهت صلاحية الرابط. أعد تحميل الصفحة.")
+        except BadSignature:
+            return HttpResponseForbidden("رابط غير صالح.")
+        if value != str(pk):
+            return HttpResponseForbidden("رابط غير صالح.")
+        # فتح الرابط كصفحة مستقلة = محاولة تحميل/حفظ → مرفوض
+        if request.headers.get("Sec-Fetch-Dest") == "document":
+            return HttpResponseForbidden("هذا المحتوى متاح للعرض داخل الموقع فقط.")
+
+        resource = get_object_or_404(Resource, pk=pk)
+        if not resource.file:
+            raise Http404("لا يوجد ملف.")
+        try:
+            size = resource.file.size
+            fh = resource.file.open("rb")
+        except (FileNotFoundError, OSError, ValueError):
+            raise Http404("الملف غير موجود.")
+        ctype = mimetypes.guess_type(resource.file.name)[0] or "application/octet-stream"
+
+        m = _RANGE_RE.fullmatch(request.headers.get("Range", "").strip())
+        if m and (m.group(1) or m.group(2)):
+            if m.group(1):
+                start = int(m.group(1))
+                end = min(int(m.group(2)), size - 1) if m.group(2) else size - 1
+            else:  # bytes=-N (آخر N بايت)
+                start = max(0, size - int(m.group(2)))
+                end = size - 1
+            if start >= size or start > end:
+                fh.close()
+                resp = HttpResponse(status=416)
+                resp["Content-Range"] = f"bytes */{size}"
+                return _protect(resp)
+            length = end - start + 1
+            resp = StreamingHttpResponse(_iter_file(fh, start, length), status=206, content_type=ctype)
+            resp["Content-Range"] = f"bytes {start}-{end}/{size}"
+            resp["Content-Length"] = str(length)
+            return _protect(resp)
+
+        resp = FileResponse(fh, content_type=ctype)
+        resp["Content-Length"] = str(size)
+        return _protect(resp)

@@ -8,7 +8,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 
-from config.validators import document_validators
+from config.validators import resource_validators
 
 
 class Category(models.Model):
@@ -62,8 +62,15 @@ class Resource(models.Model):
     resource_type = models.CharField("النوع", max_length=10, choices=Type.choices, default=Type.RESEARCH)
     file = models.FileField(
         "الملف (PDF)", upload_to="library/", blank=True, null=True,
-        validators=document_validators(2000),
+        validators=resource_validators(2000),
     )
+
+    # رابط فيديو خارجي (YouTube أو OneDrive/SharePoint) يُعرض داخل الموقع مباشرة
+    video_url = models.URLField("رابط فيديو خارجي", max_length=1000, blank=True)
+
+    # عدّادات: مرات تشغيل الفيديو داخل الموقع + الضغطات على رابط الفيديو الخارجي
+    view_count = models.PositiveIntegerField("عدد المشاهدات", default=0)
+    click_count = models.PositiveIntegerField("عدد الضغطات على الرابط", default=0)
 
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,

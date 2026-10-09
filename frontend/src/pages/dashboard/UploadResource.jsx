@@ -15,6 +15,7 @@ import { useUI } from "../../context/UISettingsContext";
 import { useConfirm } from "../../context/ConfirmContext";
 import { tr } from "../../utils/tr";
 import { ALLOWED_EXTS, ACCEPT_ATTR, MAX_FILE_MB, fileExt, fileKindInfo } from "../../utils/fileKind";
+import { normalizeVideoInput, parseVideoLink } from "../../utils/videoLink";
 
 const TYPES = ["RESEARCH", "LECTURE", "ARTICLE"];
 const EMPTY = {
@@ -22,6 +23,7 @@ const EMPTY = {
   description_ar: "", description_en: "",
   content_ar: "", content_en: "",
   resource_type: "", category: "",
+  video_url: "",
 };
 
 export default function UploadResource() {
@@ -74,8 +76,14 @@ export default function UploadResource() {
     setFile(f);
   };
 
+  // رابط الفيديو: يقبل رابطاً أو كود تضمين (iframe) من YouTube أو Microsoft
+  const videoUrl = normalizeVideoInput(form.video_url);
+  const videoLink = videoUrl ? parseVideoLink(videoUrl) : null;
+  const videoInvalid = !!videoUrl && !videoLink?.provider;
+
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (videoInvalid) return;
     if (!(await confirm({
       message: ar("رفع هذا المحتوى وإرساله للمراجعة؟", "Upload this content and send it for review?"),
       confirmText: t("common.send"),
@@ -94,6 +102,7 @@ export default function UploadResource() {
       fd.append("content_en", form.content_en);
       fd.append("resource_type", form.resource_type);
       fd.append("category", form.category);
+      fd.append("video_url", videoUrl);
       if (file) fd.append("file", file);
       await LibraryAPI.create(fd, {
         onUploadProgress: (ev) => ev.total && setProgress(Math.round((ev.loaded * 100) / ev.total)),
@@ -196,14 +205,35 @@ export default function UploadResource() {
                 </Box>
 
                 <Box>
+                  <TextField
+                    label={ar("رابط فيديو (YouTube أو Microsoft OneDrive/SharePoint)", "Video link (YouTube or Microsoft OneDrive/SharePoint)")}
+                    value={form.video_url}
+                    onChange={set("video_url")}
+                    fullWidth
+                    placeholder="https://www.youtube.com/watch?v=…"
+                    error={videoInvalid}
+                    helperText={
+                      videoInvalid
+                        ? ar("الرابط غير مدعوم — يُقبل YouTube أو Microsoft OneDrive/SharePoint فقط.", "Unsupported link — only YouTube or Microsoft OneDrive/SharePoint.")
+                        : videoLink?.provider === "microsoft" && !videoLink.embedUrl
+                          ? ar("سيظهر كزر يفتح الفيديو في نافذة جديدة. لعرضه داخل الموقع: من صفحة الفيديو في Stream اختر «مشاركة ← تضمين» والصق كود التضمين هنا.",
+                               "Will show as a button opening the video in a new tab. To play it inside the site: in Stream choose Share → Embed and paste the embed code here.")
+                          : videoLink?.embedUrl
+                            ? ar("✓ سيُعرض الفيديو داخل الموقع مباشرة.", "✓ The video will play inside the site.")
+                            : ar("اختياري — الصق رابط الفيديو أو كود التضمين.", "Optional — paste the video link or embed code.")
+                    }
+                  />
+                </Box>
+
+                <Box>
                   <Button component="label" variant="outlined" startIcon={<UploadFileRoundedIcon />} disabled={submitting}>
                     {ar("رفع ملفات مرفقة", "Upload attachments")}
                     <input hidden type="file" accept={ACCEPT_ATTR} onChange={onPickFile} />
                   </Button>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
                     {ar(
-                      `اختياري — ملف واحد: PDF، Word، PowerPoint، فيديو MP4، صوت MP3/WAV (حتى ${MAX_FILE_MB} ميغابايت).`,
-                      `Optional — one file: PDF, Word, PowerPoint, MP4 video, MP3/WAV audio (up to ${MAX_FILE_MB} MB).`
+                      `اختياري — ملف واحد: PDF، فيديو MP4، صوت MP3/WAV (حتى ${MAX_FILE_MB} ميغابايت). يُعرض داخل الموقع فقط ولا يمكن تحميله؛ حوّل ملفات Word/PowerPoint إلى PDF قبل رفعها.`,
+                      `Optional — one file: PDF, MP4 video, MP3/WAV audio (up to ${MAX_FILE_MB} MB). It is view-only on the site and cannot be downloaded; convert Word/PowerPoint files to PDF first.`
                     )}
                   </Typography>
                   {file && (() => {
@@ -239,7 +269,7 @@ export default function UploadResource() {
                     type="submit"
                     variant="contained"
                     size="large"
-                    disabled={submitting}
+                    disabled={submitting || videoInvalid}
                     startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : null}
                   >
                     {t("common.send")}

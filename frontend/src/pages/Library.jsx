@@ -12,7 +12,9 @@ import { LibraryAPI } from "../api/services";
 import { asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
-import { fileKindInfo } from "../utils/fileKind";
+import { resourceFileInfo } from "../utils/fileKind";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
 
 const TYPE_COLORS = { RESEARCH: "primary", LECTURE: "secondary", ARTICLE: "warning" };
 const PAGE_SIZE = 12; // يطابق PAGE_SIZE في إعدادات الخلفية
@@ -101,8 +103,14 @@ export default function Library() {
                 <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1.5, height: "100%" }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Chip label={t(`types.${r.resource_type}`)} color={TYPE_COLORS[r.resource_type]} size="small" />
-                    {r.file && (() => {
-                      const info = fileKindInfo(r.file, lang);
+                    {r.video_url && !r.file_ext && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, color: "secondary.main" }}>
+                        <PlayCircleRoundedIcon fontSize="small" />
+                        <Typography variant="caption" fontWeight={700}>{lang === "ar" ? "فيديو" : "Video"}</Typography>
+                      </Box>
+                    )}
+                    {r.file_ext && (() => {
+                      const info = resourceFileInfo(r, lang);
                       const Icon = info.icon;
                       return (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, color: info.color }}>
@@ -115,10 +123,17 @@ export default function Library() {
                   <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.05rem", lineHeight: 1.4 }}>
                     {tr(r, "title", lang)}
                   </Typography>
-                  <Box sx={{ mt: "auto", pt: 1.5, borderTop: 1, borderColor: "divider" }}>
+                  <Box sx={{ mt: "auto", pt: 1.5, borderTop: 1, borderColor: "divider", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
                     <Typography variant="body2" color="text.secondary">
                       {t("common.by")} {r.author_name}
                     </Typography>
+                    {/* عدد المشاهدات: يظهر فقط إن أرسلته الخلفية (للمدير، أو للجميع إن فعّله) */}
+                    {r.view_count != null && (r.video_url || resourceFileInfo(r, lang)?.kind === "video") && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.4, color: "text.secondary" }}>
+                        <VisibilityRoundedIcon sx={{ fontSize: 16 }} />
+                        <Typography variant="caption">{r.view_count}</Typography>
+                      </Box>
+                    )}
                   </Box>
                 </CardContent>
               </CardActionArea>

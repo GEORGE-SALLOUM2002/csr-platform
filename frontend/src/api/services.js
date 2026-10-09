@@ -40,6 +40,12 @@ export const LibraryAPI = {
   remove: (id) => client.delete(`/resources/${id}/`),
 };
 
+// ---------------- الإحصاءات (مدير النظام) ----------------
+export const StatsAPI = {
+  get: () => client.get("/stats/"),
+  setShowViewCounts: (value) => client.patch("/site-settings/", { show_view_counts: value }),
+};
+
 // ---------------- المحتوى العام ----------------
 export const ContentAPI = {
   news: (params) => client.get("/news/", { params }),

@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     NewsViewSet, ActivityViewSet, ActivityFileViewSet, BoardMemberViewSet,
     SmartAnnouncementViewSet, PatientTopicViewSet, ContactMessageViewSet,
-    SiteSettingsView,
+    SiteSettingsView, record_visit, site_stats,
 )
 
 router = DefaultRouter()
@@ -18,4 +18,6 @@ router.register("contact", ContactMessageViewSet, basename="contact")
 
 urlpatterns = [
     path("site-settings/", SiteSettingsView.as_view(), name="site-settings"),
+    path("stats/visit/", record_visit, name="stats-visit"),
+    path("stats/", site_stats, name="stats"),
 ] + router.urls

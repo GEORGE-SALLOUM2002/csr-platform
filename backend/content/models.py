@@ -242,6 +242,9 @@ class SiteSettings(models.Model):
     # False = يُنشَر محتوى الأطباء مباشرةً دون مراجعة.
     require_review = models.BooleanField("مراجعة المحتوى العلمي قبل نشره", default=True)
 
+    # إظهار عدد المشاهدات/الضغطات للزوار والأعضاء (المدير يراها دائماً)
+    show_view_counts = models.BooleanField("إظهار عدد المشاهدات للجميع", default=False)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -259,3 +262,18 @@ class SiteSettings(models.Model):
     def load(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+# ============================ إحصاء الزيارات ============================
+class DailyVisit(models.Model):
+    """عدد زيارات الموقع لكل يوم (زيارة = جلسة متصفح جديدة)."""
+    date = models.DateField("اليوم", unique=True)
+    count = models.PositiveIntegerField("عدد الزيارات", default=0)
+
+    class Meta:
+        verbose_name = "زيارات يوم"
+        verbose_name_plural = "إحصاء الزيارات"
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"{self.date}: {self.count}"

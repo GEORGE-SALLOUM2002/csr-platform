@@ -28,6 +28,7 @@ import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import SupervisorAccountRoundedIcon from "@mui/icons-material/SupervisorAccountRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
+import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
 import TranslateRoundedIcon from "@mui/icons-material/TranslateRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
@@ -70,6 +71,7 @@ const dashboardLinks = {
   ADMIN: [
     { to: "/dashboard/accounts", labelKey: "dashboard.accounts", icon: <HowToRegRoundedIcon /> },
     { to: "/dashboard/members", labelKey: "dashboard.members", icon: <ManageAccountsRoundedIcon /> },
+    { to: "/dashboard/stats", labelKey: "dashboard.stats", icon: <InsightsRoundedIcon /> },
     { to: "/dashboard/editors", labelKey: "dashboard.manageEditors", icon: <SupervisorAccountRoundedIcon /> },
     { to: "/dashboard/review", labelKey: "dashboard.reviewContent", icon: <FactCheckRoundedIcon /> },
     { to: "/dashboard/categories", labelKey: "dashboard.manageCategories", icon: <CategoryRoundedIcon /> },
