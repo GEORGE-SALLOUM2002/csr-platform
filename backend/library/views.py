@@ -1,6 +1,7 @@
 """واجهات المكتبة: التصنيفات + الموارد العلمية مع سير الاعتماد."""
 import mimetypes
 import re
+from urllib.parse import quote
 
 from django.conf import settings
 from django.core.signing import BadSignature, SignatureExpired
@@ -174,6 +175,15 @@ class ResourceViewSet(viewsets.ModelViewSet):
         resource = get_object_or_404(Resource, pk=pk)
         if not resource.file:
             raise Http404("لا يوجد ملف.")
+
+        # الإنتاج (Docker): يسلّم Django الملف إلى Nginx عبر مسار داخلي محمي
+        if settings.USE_X_ACCEL_REDIRECT:
+            resp = HttpResponse()
+            resp["Content-Type"] = mimetypes.guess_type(resource.file.name)[0] or "application/octet-stream"
+            resp["X-Accel-Redirect"] = "/_protected/" + quote(resource.file.name)
+            resp = _protect(resp)
+            del resp["Accept-Ranges"]  # يضيفه Nginx بنفسه
+            return resp
         try:
             size = resource.file.size
             fh = resource.file.open("rb")

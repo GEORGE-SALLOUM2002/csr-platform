@@ -95,9 +95,11 @@ docker compose up -d --build
 مثال سريع باستخدام Caddy كمُنهٍ لـ TLS أمام الحاوية:
 
 ```bash
-# ثبّت Caddy على الخادم، ثم في /etc/caddy/Caddyfile:
-example.com {
-    reverse_proxy localhost:80
+# 1) في .env اربط الموقع على المنفذ 8080 داخلياً فقط (لا يصل إليه أحد من الخارج):
+#    HTTP_PORT=127.0.0.1:8080
+# 2) ثبّت Caddy على الخادم، ثم في /etc/caddy/Caddyfile:
+example.com, www.example.com {
+    reverse_proxy 127.0.0.1:8080
 }
 ```
 

@@ -54,11 +54,35 @@ class ActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = [
             "id", "title_ar", "title_en", "description_ar", "description_en",
-            "category", "category_display", "date",
+            "category", "category_display", "date", "end_date",
             "location_ar", "location_en", "cover_image", "video_url",
             "files", "created_at",
         ]
         read_only_fields = ["created_at"]
+
+
+    def to_internal_value(self, data):
+        """نماذج FormData ترسل الحقل الفارغ كنص فارغ — نحوّله إلى None ليُحذف التاريخ."""
+        if hasattr(data, "get"):
+            blanks = [f for f in ("date", "end_date") if data.get(f) == ""]
+            if blanks:
+                data = data.copy()
+                for f in blanks:
+                    data[f] = None
+        return super().to_internal_value(data)
+
+    def validate(self, attrs):
+        """تاريخ الانتهاء لا يسبق تاريخ البداية (يعمل عند الإنشاء والتعديل الجزئي)."""
+        start = attrs.get("date", getattr(self.instance, "date", None))
+        end = attrs.get("end_date", getattr(self.instance, "end_date", None))
+        if end:
+            if not start:
+                raise serializers.ValidationError({"end_date": "حدّد تاريخ البداية أولاً."})
+            if end < start:
+                raise serializers.ValidationError(
+                    {"end_date": "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية أو مساوياً له."}
+                )
+        return attrs
 
 
 class BoardMemberSerializer(serializers.ModelSerializer):

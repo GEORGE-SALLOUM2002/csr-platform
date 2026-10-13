@@ -18,6 +18,7 @@ import { ContentAPI } from "../api/services";
 import { asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
+import { eventDateLabel } from "../utils/eventDate";
 
 export default function FeaturedBanner() {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function FeaturedBanner() {
           .map((a) => ({ kind: "ann", id: a.id, title: tr(a, "title", lang), link: a.link }));
         const acts = asList(ac.data).map((a) => ({
           kind: "act", id: a.id, title: tr(a, "title", lang),
-          category: a.category, date: a.date,
+          category: a.category, date: a.date, end_date: a.end_date,
           location: tr(a, "location", lang), image: a.cover_image,
         }));
         setSlides([...acts, ...anns]);
@@ -65,7 +66,11 @@ export default function FeaturedBanner() {
 
   if (slides.length === 0) return null;
 
-  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-GB") : "");
+  const fmtDate = (s) => eventDateLabel(s, lang);
+
+  // شريط مرتفع ليظهر البوستر كاملاً. إن لم تكن هناك أي صورة (إعلانات نصّية فقط) نكتفي بارتفاع صغير.
+  const anyImg = slides.some((s) => s.kind === "act" && s.image);
+  const bannerH = anyImg ? { xs: 500, sm: 440, md: 480 } : { xs: 240, md: 300 };
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
@@ -73,10 +78,10 @@ export default function FeaturedBanner() {
         {lang === "ar" ? "أحدث الإعلانات والمؤتمرات" : "Latest announcements & conferences"}
       </Typography>
 
-      <Box sx={{ position: "relative", height: { xs: 240, md: 320 }, borderRadius: 4, overflow: "hidden", boxShadow: 6, bgcolor: "primary.dark" }}>
+      <Box sx={{ position: "relative", height: bannerH, borderRadius: 4, overflow: "hidden", boxShadow: 6, bgcolor: "primary.dark" }}>
         {slides.map((s, i) => {
           const isAct = s.kind === "act";
-          const hasImg = isAct && s.image;
+          const hasImg = isAct && !!s.image;
           return (
             <Box
               key={`${s.kind}-${s.id}`}
@@ -91,46 +96,93 @@ export default function FeaturedBanner() {
                 opacity: i === idx ? 1 : 0,
                 transition: "opacity .6s ease",
                 pointerEvents: i === idx ? "auto" : "none",
-                display: "flex",
-                alignItems: "flex-end",
-                p: { xs: 3, md: 5 },
                 color: "#fff",
-                backgroundImage: hasImg
-                  ? `linear-gradient(90deg, rgba(6,26,25,.85), rgba(6,26,25,.35)), url(${s.image})`
-                  : `linear-gradient(120deg, #0A5A59, #12938F)`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                // الصورة في جهة والنص في جهة (شاشة كبيرة)، أو الصورة فوق والنص تحتها (موبايل)
+                display: "grid",
+                gridTemplateColumns: hasImg ? { xs: "1fr", md: "1.15fr 0.85fr" } : "1fr",
+                gridTemplateRows: hasImg ? { xs: "1fr auto", md: "1fr" } : "1fr",
+                backgroundImage: `linear-gradient(120deg, #0A5A59, #12938F)`,
               }}
             >
-              <Box sx={{ maxWidth: 720 }}>
-                <Chip
-                  icon={isAct ? <EventRoundedIcon /> : <CampaignRoundedIcon />}
-                  label={isAct ? t(`categories.${s.category}`) : (lang === "ar" ? "إعلان" : "Announcement")}
-                  size="small"
-                  sx={{ bgcolor: "rgba(255,255,255,.2)", color: "#fff", mb: 1.5, "& .MuiChip-icon": { color: "#fff" } }}
-                />
-                <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: "1.4rem", sm: "1.8rem", md: "2.125rem" }, lineHeight: 1.25, mb: 1, textShadow: "0 2px 8px rgba(0,0,0,.3)" }}>
-                  {s.title}
-                </Typography>
-                {isAct && (
-                  <Typography sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", mb: 2, opacity: .95 }}>
-                    {s.date && <span>{fmtDate(s.date)}</span>}
-                    {s.location && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        <PlaceRoundedIcon fontSize="small" /> {s.location}
-                      </span>
-                    )}
+              {hasImg && (
+                <Box sx={{ position: "relative", minHeight: 0, overflow: "hidden" }}>
+                  {/* نسخة مكبّرة وضبابية من الصورة تملأ الفراغ حولها بدل الأشرطة الفارغة */}
+                  <Box
+                    aria-hidden
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      backgroundImage: `url(${s.image})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      filter: "blur(18px) brightness(.55)",
+                      transform: "scale(1.15)",
+                    }}
+                  />
+                  {/* الصورة كاملة بلا قصّ (contain) */}
+                  <Box
+                    component="img"
+                    src={s.image}
+                    alt=""
+                    loading="lazy"
+                    sx={{ position: "relative", width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                  />
+                </Box>
+              )}
+
+              <Box
+                sx={{
+                  minWidth: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  px: { xs: 3, md: 4 },
+                  pt: { xs: 2.5, md: 4 },
+                  pb: { xs: 4.5, md: 5 }, // مساحة أسفل النص لنقاط التنقّل
+                }}
+              >
+                <Box sx={{ maxWidth: 720 }}>
+                  <Chip
+                    icon={isAct ? <EventRoundedIcon /> : <CampaignRoundedIcon />}
+                    label={isAct ? t(`categories.${s.category}`) : (lang === "ar" ? "إعلان" : "Announcement")}
+                    size="small"
+                    sx={{ bgcolor: "rgba(255,255,255,.2)", color: "#fff", mb: 1.5, "& .MuiChip-icon": { color: "#fff" } }}
+                  />
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: { xs: "1.3rem", sm: "1.6rem", md: "1.9rem" },
+                      lineHeight: 1.3,
+                      mb: 1,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {s.title}
                   </Typography>
-                )}
-                <Button
-                  variant="contained"
-                  color="inherit"
-                  onClick={(e) => { e.stopPropagation(); go(s); }}
-                  sx={{ bgcolor: "#fff", color: "primary.dark", "&:hover": { bgcolor: "#fff" } }}
-                  endIcon={<ArrowBackRoundedIcon sx={{ transform: lang === "ar" ? "none" : "scaleX(-1)" }} />}
-                >
-                  {t("common.readMore")}
-                </Button>
+                  {isAct && (
+                    <Typography sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", mb: 2, opacity: .95 }}>
+                      {s.date && <span>{fmtDate(s)}</span>}
+                      {s.location && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <PlaceRoundedIcon fontSize="small" /> {s.location}
+                        </span>
+                      )}
+                    </Typography>
+                  )}
+                  <Button
+                    variant="contained"
+                    color="inherit"
+                    onClick={(e) => { e.stopPropagation(); go(s); }}
+                    sx={{ alignSelf: "flex-start", bgcolor: "#fff", color: "primary.dark", "&:hover": { bgcolor: "#fff" } }}
+                    endIcon={<ArrowBackRoundedIcon sx={{ transform: lang === "ar" ? "none" : "scaleX(-1)" }} />}
+                  >
+                    {t("common.readMore")}
+                  </Button>
+                </Box>
               </Box>
             </Box>
           );

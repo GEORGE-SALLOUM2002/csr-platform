@@ -1,0 +1,176 @@
+diff --git a/.env.production.example b/.env.production.example
+index 5138ca7..01de746 100644
+--- a/.env.production.example
++++ b/.env.production.example
+@@ -31,7 +31,7 @@ DB_USER=csr_user
+ DB_PASSWORD=ضع-كلمة-مرور-قوية-هنا
+ 
+ # ------- منفذ الويب المكشوف -------
+-# 80 لـ HTTP. عند تفعيل HTTPS استخدم مُنهي TLS (انظر دليل النشر).
++# 80 لـ HTTP فقط. مع Caddy لـ HTTPS (الموصى به) اجعلها 127.0.0.1:8080 (انظر دليل النشر).
+ HTTP_PORT=80
+ 
+ # ------- أمان HTTPS (فعّلها بعد تجهيز شهادة TLS فقط) -------
+diff --git a/DEPLOYMENT.md b/DEPLOYMENT.md
+index 88bbb61..a727a18 100644
+--- a/DEPLOYMENT.md
++++ b/DEPLOYMENT.md
+@@ -95,9 +95,11 @@ docker compose up -d --build
+ مثال سريع باستخدام Caddy كمُنهٍ لـ TLS أمام الحاوية:
+ 
+ ```bash
+-# ثبّت Caddy على الخادم، ثم في /etc/caddy/Caddyfile:
+-example.com {
+-    reverse_proxy localhost:80
++# 1) في .env اربط الموقع على المنفذ 8080 داخلياً فقط (لا يصل إليه أحد من الخارج):
++#    HTTP_PORT=127.0.0.1:8080
++# 2) ثبّت Caddy على الخادم، ثم في /etc/caddy/Caddyfile:
++example.com, www.example.com {
++    reverse_proxy 127.0.0.1:8080
+ }
+ ```
+ 
+diff --git a/backend/config/settings.py b/backend/config/settings.py
+index f54fba9..9d9af2c 100644
+--- a/backend/config/settings.py
++++ b/backend/config/settings.py
+@@ -149,6 +149,8 @@ PRIVATE_MEDIA_ROOT = Path(os.getenv("PRIVATE_MEDIA_ROOT", str(BASE_DIR / "privat
+ CREDENTIAL_URL_MAX_AGE = int(os.getenv("CREDENTIAL_URL_MAX_AGE", "3600"))
+ # صلاحية رابط عرض ملفات المحتوى العلمي (ثوانٍ) — يكفي لمشاهدة محاضرة طويلة كاملة
+ RESOURCE_STREAM_MAX_AGE = int(os.getenv("RESOURCE_STREAM_MAX_AGE", str(6 * 3600)))
++# True خلف Nginx (Docker): يخدم Nginx ملفات المحتوى العلمي بعد تحقّق Django (X-Accel-Redirect)
++USE_X_ACCEL_REDIRECT = env_bool("USE_X_ACCEL_REDIRECT", False)
+ 
+ # ------------------------- التخزين (Django 5 STORAGES) -------------------------
+ STORAGES = {
+diff --git a/backend/library/views.py b/backend/library/views.py
+index 7dc9959..228165b 100644
+--- a/backend/library/views.py
++++ b/backend/library/views.py
+@@ -1,6 +1,7 @@
+ """واجهات المكتبة: التصنيفات + الموارد العلمية مع سير الاعتماد."""
+ import mimetypes
+ import re
++from urllib.parse import quote
+ 
+ from django.conf import settings
+ from django.core.signing import BadSignature, SignatureExpired
+@@ -174,6 +175,15 @@ class ResourceViewSet(viewsets.ModelViewSet):
+         resource = get_object_or_404(Resource, pk=pk)
+         if not resource.file:
+             raise Http404("لا يوجد ملف.")
++
++        # الإنتاج (Docker): يسلّم Django الملف إلى Nginx عبر مسار داخلي محمي
++        if settings.USE_X_ACCEL_REDIRECT:
++            resp = HttpResponse()
++            resp["Content-Type"] = mimetypes.guess_type(resource.file.name)[0] or "application/octet-stream"
++            resp["X-Accel-Redirect"] = "/_protected/" + quote(resource.file.name)
++            resp = _protect(resp)
++            del resp["Accept-Ranges"]  # يضيفه Nginx بنفسه
++            return resp
+         try:
+             size = resource.file.size
+             fh = resource.file.open("rb")
+diff --git a/docker-compose.yml b/docker-compose.yml
+index b639230..5e09b61 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -32,6 +32,8 @@ services:
+       DB_HOST: db
+       DB_PORT: "5432"
+       USE_SQLITE: "False"
++      # ملفات المحتوى العلمي يخدمها Nginx بعد تحقّق Django من الرابط الموقّع (X-Accel-Redirect)
++      USE_X_ACCEL_REDIRECT: "True"
+     depends_on:
+       db:
+         condition: service_healthy
+@@ -41,7 +43,9 @@ services:
+     expose:
+       - "8000"
+     healthcheck:
+-      test: ["CMD-SHELL", "curl -fsS http://localhost:8001/ || exit 1"]
++      # فحص منفذ Gunicorn (8000). لا نستخدم طلب HTTP لأن Django يرفض المضيف localhost
++      # عندما لا يكون ضمن ALLOWED_HOSTS في الإنتاج، فيبقى الفحص فاشلاً دائماً.
++      test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
+       interval: 15s
+       timeout: 5s
+       retries: 5
+diff --git a/frontend/nginx.conf b/frontend/nginx.conf
+index 1138c07..9504d6a 100644
+--- a/frontend/nginx.conf
++++ b/frontend/nginx.conf
+@@ -1,6 +1,14 @@
+ # ============================================================
+ #  Nginx — خدمة واجهة React (SPA) + تمرير الطلبات إلى الخلفية
+ # ============================================================
++# بروتوكول الطلب الأصلي: عند وجود طبقة HTTPS أمام هذا الخادم (مثل Caddy) نمرّر
++# قيمتها X-Forwarded-Proto=https كما هي؛ وإلا نستخدم بروتوكول هذا الخادم نفسه.
++# بدون هذا يظن Django أن الطلب HTTP فيدخل في حلقة إعادة توجيه عند تفعيل SECURE_SSL_REDIRECT.
++map $http_x_forwarded_proto $forwarded_proto {
++    default $http_x_forwarded_proto;
++    ""      $scheme;
++}
++
+ server {
+     listen 80;
+     server_name _;
+@@ -26,7 +34,7 @@ server {
+ 
+     # ---- الـ API ----
+     location /api/ {
+-        proxy_pass http://backend:8001;
++        proxy_pass http://backend:8000;
+         # مهلة أطول لرفع ملفات الفيديو/الصوت الكبيرة
+         client_body_timeout 300s;
+         proxy_send_timeout 600s;
+@@ -34,27 +42,27 @@ server {
+         proxy_set_header Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+-        proxy_set_header X-Forwarded-Proto $scheme;
++        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+         proxy_set_header X-Forwarded-Host $host;
+         proxy_redirect off;
+     }
+ 
+     # ---- لوحة تحكم Django ----
+     location /admin/ {
+-        proxy_pass http://backend:8001;
++        proxy_pass http://backend:8000;
+         proxy_set_header Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+-        proxy_set_header X-Forwarded-Proto $scheme;
++        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+         proxy_set_header X-Forwarded-Host $host;
+         proxy_redirect off;
+     }
+ 
+     # ---- ملفات Django الثابتة (لوحة الأدمن وDRF) عبر WhiteNoise ----
+     location /static/ {
+-        proxy_pass http://backend:8001;
++        proxy_pass http://backend:8000;
+         proxy_set_header Host $host;
+-        proxy_set_header X-Forwarded-Proto $scheme;
++        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+         proxy_set_header X-Forwarded-Host $host;
+     }
+ 
+@@ -66,6 +74,17 @@ server {
+         return 404;
+     }
+ 
++    #  مسار داخلي فقط (internal): لا يمكن طلبه من المتصفح مباشرةً. يُستخدم بعد أن يتحقق
++    #  Django من الرابط الموقّع ويرد بـ X-Accel-Redirect؛ فيرسل Nginx الملف بكفاءة
++    #  مع دعم التقديم/التأخير في الفيديو (Range) دون أن يشغل عمّال Django.
++    location ^~ /_protected/library/ {
++        internal;
++        alias /var/www/media/library/;
++        # Content-Type و Cache-Control و Content-Disposition تأتي من رد Django نفسه
++        add_header X-Content-Type-Options nosniff always;
++        add_header Cross-Origin-Resource-Policy same-origin always;
++    }
++
+     location /media/ {
+         alias /var/www/media/;
+         access_log off;

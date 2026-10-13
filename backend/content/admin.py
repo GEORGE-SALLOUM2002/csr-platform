@@ -20,7 +20,7 @@ class NewsAdmin(admin.ModelAdmin):
 
 @admin.register(Activity)
 class ActivityAdmin(admin.ModelAdmin):
-    list_display = ["title_ar", "category", "date", "location_ar"]
+    list_display = ["title_ar", "category", "date", "end_date", "location_ar"]
     list_filter = ["category"]
     search_fields = ["title_ar", "title_en"]
     inlines = [ActivityFileInline]

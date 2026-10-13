@@ -10,6 +10,7 @@ import { ContentAPI } from "../api/services";
 import { useFetch, asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
+import { eventDateLabel } from "../utils/eventDate";
 
 const CATEGORIES = ["CONFERENCE", "WORKSHOP", "SEMINAR"];
 
@@ -65,7 +66,7 @@ export default function Activities() {
                 </Box>
                 <CardContent sx={{ display: "flex", flexDirection: "column", gap: 0.75, width: "100%" }}>
                   <Typography variant="caption" color="primary" fontWeight={700}>
-                    {new Date(a.date).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-GB")}
+                    {eventDateLabel(a, lang)}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.05rem", lineHeight: 1.4 }}>
                     {tr(a, "title", lang)}

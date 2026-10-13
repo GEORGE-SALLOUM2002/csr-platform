@@ -18,20 +18,12 @@ import { ContentAPI } from "../api/services";
 import { asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
+import { eventDays, eventDateLabel, isMultiDay, dayCountLabel } from "../utils/eventDate";
 
 const MAX_PAGES = 20; // حدّ أمان عند تتبّع صفحات النتائج
 
 /** مفتاح اليوم بصيغة YYYY-MM-DD (بالتوقيت المحلي). */
 const dayKey = (y, m, d) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-
-/** يحوّل تاريخ الـ API إلى مفتاح يوم دون انزياح المنطقة الزمنية. */
-function toKey(value) {
-  if (!value) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  const d = new Date(value);
-  return isNaN(d) ? null : dayKey(d.getFullYear(), d.getMonth(), d.getDate());
-}
 
 /** يجلب كل الأنشطة عبر صفحات النتائج (الـ API مقسّم إلى صفحات). */
 async function fetchAllActivities() {
@@ -63,10 +55,11 @@ export default function EventsCalendar() {
   // تجميع الفعاليات حسب اليوم
   const byDay = useMemo(() => {
     const map = {};
+    // النشاط الممتدّ على عدة أيام يظهر في كل يوم من أيامه
     events.forEach((a) => {
-      const k = toKey(a.date);
-      if (!k) return;
-      (map[k] = map[k] || []).push(a);
+      eventDays(a).forEach((k) => {
+        (map[k] = map[k] || []).push(a);
+      });
     });
     return map;
   }, [events]);
@@ -104,10 +97,15 @@ export default function EventsCalendar() {
 
   // فعاليات الشهر المعروض (تظهر عند عدم اختيار يوم)
   const monthPrefix = dayKey(view.y, view.m, 1).slice(0, 7);
-  const monthEvents = Object.keys(byDay)
-    .filter((k) => k.startsWith(monthPrefix))
-    .sort()
-    .flatMap((k) => byDay[k]);
+  const monthEvents = [
+    ...new Map(
+      Object.keys(byDay)
+        .filter((k) => k.startsWith(monthPrefix))
+        .sort()
+        .flatMap((k) => byDay[k])
+        .map((a) => [a.id, a]) // النشاط الممتدّ يظهر مرة واحدة في قائمة الشهر
+    ).values(),
+  ];
   const listed = selected ? byDay[selected] || [] : monthEvents;
 
   const colorOf = (items) =>
@@ -223,8 +221,11 @@ export default function EventsCalendar() {
                       sx={{ fontWeight: 600 }}
                     />
                     <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                      {new Date(`${toKey(a.date)}T00:00:00`).toLocaleDateString(locale)}
+                      {eventDateLabel(a, lang)}
                     </Typography>
+                    {isMultiDay(a) && (
+                      <Chip label={dayCountLabel(a, lang)} size="small" variant="outlined" />
+                    )}
                   </Stack>
                   <Typography fontWeight={600}>{tr(a, "title", lang)}</Typography>
                   {tr(a, "location", lang) && (

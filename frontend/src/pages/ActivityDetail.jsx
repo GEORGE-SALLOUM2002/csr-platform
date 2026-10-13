@@ -12,6 +12,7 @@ import { useFetch } from "../hooks/useFetch";
 import { ContentAPI } from "../api/services";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
+import { eventDateLabel, dayCountLabel, isMultiDay } from "../utils/eventDate";
 
 export default function ActivityDetail() {
   const { id } = useParams();
@@ -41,7 +42,12 @@ export default function ActivityDetail() {
 
       <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
         <Chip label={t(`categories.${data.category}`)} color="primary" />
-        <Chip icon={<EventRoundedIcon />} label={new Date(data.date).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-GB")} variant="outlined" />
+        {data.date && (
+          <Chip icon={<EventRoundedIcon />} label={eventDateLabel(data, lang)} variant="outlined" />
+        )}
+        {isMultiDay(data) && (
+          <Chip label={dayCountLabel(data, lang)} variant="outlined" color="primary" />
+        )}
         {tr(data, "location", lang) && (
           <Chip icon={<LocationOnRoundedIcon />} label={tr(data, "location", lang)} variant="outlined" />
         )}

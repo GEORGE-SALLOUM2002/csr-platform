@@ -8,6 +8,7 @@
 - ContactMessage: رسائل نموذج «تواصل معنا».
 """
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -68,7 +69,12 @@ class Activity(models.Model):
     description_en = models.TextField("الوصف (إنجليزي)", blank=True)
 
     category = models.CharField("النوع", max_length=12, choices=Category.choices, default=Category.CONFERENCE)
-    date = models.DateField("التاريخ", null=True, blank=True)
+    # نشاط ليوم واحد: يُملأ «التاريخ» فقط. نشاط يمتد لعدة أيام: يُملأ «تاريخ الانتهاء» أيضاً.
+    date = models.DateField("تاريخ البداية", null=True, blank=True)
+    end_date = models.DateField(
+        "تاريخ الانتهاء", null=True, blank=True,
+        help_text="اتركه فارغاً إن كان النشاط ليوم واحد.",
+    )
     location_ar = models.CharField("المكان (عربي)", max_length=150, blank=True)
     location_en = models.CharField("المكان (إنجليزي)", max_length=150, blank=True)
 
@@ -91,6 +97,15 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.title_ar
+
+    def clean(self):
+        """تاريخ الانتهاء لا يسبق تاريخ البداية، ولا يُملأ وحده."""
+        super().clean()
+        if self.end_date:
+            if not self.date:
+                raise ValidationError({"end_date": "حدّد تاريخ البداية أولاً."})
+            if self.end_date < self.date:
+                raise ValidationError({"end_date": "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية أو مساوياً له."})
 
 
 class ActivityFile(models.Model):

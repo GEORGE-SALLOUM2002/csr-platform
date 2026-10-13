@@ -14,11 +14,12 @@ import { ContentAPI } from "../../api/services";
 import { useUI } from "../../context/UISettingsContext";
 import { useConfirm } from "../../context/ConfirmContext";
 import { tr } from "../../utils/tr";
+import { eventDateLabel } from "../../utils/eventDate";
 
 const CATS = ["CONFERENCE", "WORKSHOP", "SEMINAR"];
 const EMPTY = {
   title_ar: "", title_en: "", description_ar: "", description_en: "",
-  category: "CONFERENCE", date: "", location_ar: "", location_en: "", video_url: "",
+  category: "CONFERENCE", date: "", end_date: "", location_ar: "", location_en: "", video_url: "",
 };
 
 export default function ManageActivities() {
@@ -40,6 +41,8 @@ export default function ManageActivities() {
   const [fileToUpload, setFileToUpload] = useState(null);
 
   const editing = items.find((a) => a.id === editingId) || null;
+  // تاريخ الانتهاء (اختياري) يجب أن يكون بعد تاريخ البداية أو مساوياً له
+  const badRange = !!form.end_date && (!form.date || form.end_date < form.date);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const notify = (msg, type = "success") => setSnack({ open: true, msg, type });
 
@@ -49,7 +52,7 @@ export default function ManageActivities() {
     setForm({
       title_ar: a.title_ar || "", title_en: a.title_en || "",
       description_ar: a.description_ar || "", description_en: a.description_en || "",
-      category: a.category || "CONFERENCE", date: a.date || "",
+      category: a.category || "CONFERENCE", date: a.date || "", end_date: a.end_date || "",
       location_ar: a.location_ar || "", location_en: a.location_en || "", video_url: a.video_url || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -59,13 +62,16 @@ export default function ManageActivities() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (badRange) return;
     if (!(await confirmSave(!!editingId))) return;
     setBusy(true);
     try {
       const fd = new FormData();
       ["title_ar", "title_en", "description_ar", "description_en", "category", "location_ar", "location_en", "video_url"]
         .forEach((k) => fd.append(k, form[k]));
-      if (form.date) fd.append("date", form.date);
+      // تُرسَل حتى لو كانت فارغة ليتمكّن المشرف من مسح التاريخ عند التعديل
+      fd.append("date", form.date);
+      fd.append("end_date", form.end_date);
       if (cover) fd.append("cover_image", cover);
       if (editingId) await ContentAPI.updateActivity(editingId, fd);
       else await ContentAPI.createActivity(fd);
@@ -148,7 +154,27 @@ export default function ManageActivities() {
               <TextField select label={ar("النوع", "Type")} value={form.category} onChange={set("category")}>
                 {CATS.map((c) => <MenuItem key={c} value={c}>{t(`categories.${c}`)}</MenuItem>)}
               </TextField>
-              <TextField type="date" label={t("common.date")} value={form.date} onChange={set("date")} InputLabelProps={{ shrink: true }} />
+              <TextField
+                type="date"
+                label={ar("تاريخ البداية", "Start date")}
+                value={form.date}
+                onChange={set("date")}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                type="date"
+                label={ar("تاريخ الانتهاء (اختياري)", "End date (optional)")}
+                value={form.end_date}
+                onChange={set("end_date")}
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ min: form.date || undefined }}
+                error={badRange}
+                helperText={
+                  badRange
+                    ? ar("تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية.", "The end date must be on or after the start date.")
+                    : ar("اتركه فارغاً إن كان النشاط ليوم واحد.", "Leave empty for a single-day activity.")
+                }
+              />
               <TextField label={ar("المكان (عربي)", "Location (Arabic)")} value={form.location_ar} onChange={set("location_ar")} />
               <TextField label={ar("المكان (إنجليزي)", "Location (English)")} value={form.location_en} onChange={set("location_en")} />
             </Box>
@@ -168,7 +194,7 @@ export default function ManageActivities() {
             </Box>
 
             <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-              <Button type="submit" variant="contained" disabled={busy}>
+              <Button type="submit" variant="contained" disabled={busy || badRange}>
                 {editingId ? t("common.save") : ar("إضافة", "Add")}
               </Button>
               {editingId && <Button onClick={cancelEdit} disabled={busy}>{t("common.cancel")}</Button>}
@@ -232,7 +258,7 @@ export default function ManageActivities() {
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography sx={{ fontWeight: 600 }} noWrap>{tr(a, "title", lang)}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {t(`categories.${a.category}`)}{a.date ? ` · ${new Date(a.date).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-GB")}` : ""}
+                    {t(`categories.${a.category}`)}{a.date ? ` · ${eventDateLabel(a, lang)}` : ""}
                   </Typography>
                 </Box>
                 <IconButton color="primary" disabled={busy} onClick={() => startEdit(a)} aria-label={t("common.edit")}><EditRoundedIcon /></IconButton>

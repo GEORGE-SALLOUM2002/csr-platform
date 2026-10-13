@@ -32,6 +32,8 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
       USE_SQLITE: "False"
+      # ملفات المحتوى العلمي يخدمها Nginx بعد تحقّق Django من الرابط الموقّع (X-Accel-Redirect)
+      USE_X_ACCEL_REDIRECT: "True"
     depends_on:
       db:
         condition: service_healthy
@@ -41,7 +43,9 @@ services:
     expose:
       - "8000"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8001/ || exit 1"]
+      # فحص منفذ Gunicorn (8000). لا نستخدم طلب HTTP لأن Django يرفض المضيف localhost
+      # عندما لا يكون ضمن ALLOWED_HOSTS في الإنتاج، فيبقى الفحص فاشلاً دائماً.
+      test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

@@ -149,6 +149,8 @@ PRIVATE_MEDIA_ROOT = Path(os.getenv("PRIVATE_MEDIA_ROOT", str(BASE_DIR / "privat
 CREDENTIAL_URL_MAX_AGE = int(os.getenv("CREDENTIAL_URL_MAX_AGE", "3600"))
 # صلاحية رابط عرض ملفات المحتوى العلمي (ثوانٍ) — يكفي لمشاهدة محاضرة طويلة كاملة
 RESOURCE_STREAM_MAX_AGE = int(os.getenv("RESOURCE_STREAM_MAX_AGE", str(6 * 3600)))
+# True خلف Nginx (Docker): يخدم Nginx ملفات المحتوى العلمي بعد تحقّق Django (X-Accel-Redirect)
+USE_X_ACCEL_REDIRECT = env_bool("USE_X_ACCEL_REDIRECT", False)
 
 # ------------------------- التخزين (Django 5 STORAGES) -------------------------
 STORAGES = {
