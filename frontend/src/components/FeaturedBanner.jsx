@@ -19,6 +19,7 @@ import { asList } from "../hooks/useFetch";
 import { useUI } from "../context/UISettingsContext";
 import { tr } from "../utils/tr";
 import { eventDateLabel } from "../utils/eventDate";
+import VideoPlayer from "./VideoPlayer";
 
 export default function FeaturedBanner() {
   const { t } = useTranslation();
@@ -31,12 +32,18 @@ export default function FeaturedBanner() {
     Promise.all([ContentAPI.announcements(), ContentAPI.activities()])
       .then(([an, ac]) => {
         const anns = asList(an.data)
-          .filter((x) => x.is_live !== false)
+          // «أعلى الصفحة فقط» (BAR) تظهر في الشريط العلوي ولا تدخل هذا القسم
+          .filter((x) => x.is_live !== false && x.placement !== "BAR")
           .sort((a, b) => (b.is_pinned === true) - (a.is_pinned === true))
-          .map((a) => ({ kind: "ann", id: a.id, title: tr(a, "title", lang), link: a.link }));
+          .map((a) => ({
+            kind: "ann", id: a.id, title: tr(a, "title", lang), link: a.link,
+            image: a.image, video: a.video_url,
+            bg: a.bg_color, text: a.text_color,
+          }));
         const acts = asList(ac.data).map((a) => ({
           kind: "act", id: a.id, title: tr(a, "title", lang),
           category: a.category, date: a.date, end_date: a.end_date,
+          external: a.external_url,
           location: tr(a, "location", lang), image: a.cover_image,
         }));
         setSlides([...acts, ...anns]);
@@ -47,7 +54,9 @@ export default function FeaturedBanner() {
 
   const go = useCallback((s) => {
     if (s.kind === "act") {
-      navigate(`/activities/${s.id}`);
+      // نشاط له رابط خارجي → يُفتح مباشرةً في نافذة جديدة بدل صفحة التفاصيل
+      if (s.external) window.open(s.external, "_blank", "noopener,noreferrer");
+      else navigate(`/activities/${s.id}`);
     } else if (s.link) {
       if (/^https?:\/\//i.test(s.link)) window.open(s.link, "_blank", "noopener");
       else navigate(s.link);
@@ -68,9 +77,9 @@ export default function FeaturedBanner() {
 
   const fmtDate = (s) => eventDateLabel(s, lang);
 
-  // شريط مرتفع ليظهر البوستر كاملاً. إن لم تكن هناك أي صورة (إعلانات نصّية فقط) نكتفي بارتفاع صغير.
-  const anyImg = slides.some((s) => s.kind === "act" && s.image);
-  const bannerH = anyImg ? { xs: 500, sm: 440, md: 480 } : { xs: 240, md: 300 };
+  // شريط مرتفع ليظهر البوستر أو الفيديو كاملاً. إن كانت كل الشرائح نصّية نكتفي بارتفاع صغير.
+  const anyMedia = slides.some((s) => s.image || s.video);
+  const bannerH = anyMedia ? { xs: 500, sm: 440, md: 480 } : { xs: 240, md: 300 };
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
@@ -81,7 +90,12 @@ export default function FeaturedBanner() {
       <Box sx={{ position: "relative", height: bannerH, borderRadius: 4, overflow: "hidden", boxShadow: 6, bgcolor: "primary.dark" }}>
         {slides.map((s, i) => {
           const isAct = s.kind === "act";
-          const hasImg = isAct && !!s.image;
+          const hasVideo = !isAct && !!s.video;        // فيديو الإعلان يُعرض في جهة الوسائط
+          const hasImg = !!s.image;
+          const hasMedia = hasImg || hasVideo;
+          // ألوان الإعلان إن ضبطها المشرف، وإلا ألوان الموقع
+          const txt = s.text || "#FFFFFF";
+          const bg = s.bg || null;
           return (
             <Box
               key={`${s.kind}-${s.id}`}
@@ -96,15 +110,27 @@ export default function FeaturedBanner() {
                 opacity: i === idx ? 1 : 0,
                 transition: "opacity .6s ease",
                 pointerEvents: i === idx ? "auto" : "none",
-                color: "#fff",
-                // الصورة في جهة والنص في جهة (شاشة كبيرة)، أو الصورة فوق والنص تحتها (موبايل)
+                color: txt,
+                // الوسائط في جهة والنص في جهة (شاشة كبيرة)، أو الوسائط فوق والنص تحتها (موبايل)
                 display: "grid",
-                gridTemplateColumns: hasImg ? { xs: "1fr", md: "1.15fr 0.85fr" } : "1fr",
-                gridTemplateRows: hasImg ? { xs: "1fr auto", md: "1fr" } : "1fr",
-                backgroundImage: `linear-gradient(120deg, #0A5A59, #12938F)`,
+                gridTemplateColumns: hasMedia ? { xs: "1fr", md: "1.15fr 0.85fr" } : "1fr",
+                gridTemplateRows: hasMedia ? { xs: "1fr auto", md: "1fr" } : "1fr",
+                ...(bg
+                  ? { backgroundColor: bg }
+                  : { backgroundImage: `linear-gradient(120deg, #0A5A59, #12938F)` }),
               }}
             >
-              {hasImg && (
+              {hasVideo && (
+                // الضغط داخل المشغّل لا يفتح رابط الإعلان
+                <Box
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{ minWidth: 0, minHeight: 0, overflow: "hidden", display: "grid", alignContent: "center", p: { xs: 1.5, md: 2 } }}
+                >
+                  <VideoPlayer videoUrl={s.video} lang={lang} />
+                </Box>
+              )}
+
+              {!hasVideo && hasImg && (
                 <Box sx={{ position: "relative", minHeight: 0, overflow: "hidden" }}>
                   {/* نسخة مكبّرة وضبابية من الصورة تملأ الفراغ حولها بدل الأشرطة الفارغة */}
                   <Box
@@ -136,7 +162,8 @@ export default function FeaturedBanner() {
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
-                  px: { xs: 3, md: 4 },
+                  // مساحة جانبية أوسع بلا وسائط حتى لا يتداخل النص مع أسهم التنقّل
+                  px: hasMedia ? { xs: 3, md: 4 } : { xs: 3, md: 8 },
                   pt: { xs: 2.5, md: 4 },
                   pb: { xs: 4.5, md: 5 }, // مساحة أسفل النص لنقاط التنقّل
                 }}
@@ -146,7 +173,7 @@ export default function FeaturedBanner() {
                     icon={isAct ? <EventRoundedIcon /> : <CampaignRoundedIcon />}
                     label={isAct ? t(`categories.${s.category}`) : (lang === "ar" ? "إعلان" : "Announcement")}
                     size="small"
-                    sx={{ bgcolor: "rgba(255,255,255,.2)", color: "#fff", mb: 1.5, "& .MuiChip-icon": { color: "#fff" } }}
+                    sx={{ bgcolor: `${txt}2E`, color: txt, mb: 1.5, "& .MuiChip-icon": { color: txt } }}
                   />
                   <Typography
                     variant="h4"
@@ -177,10 +204,12 @@ export default function FeaturedBanner() {
                     variant="contained"
                     color="inherit"
                     onClick={(e) => { e.stopPropagation(); go(s); }}
-                    sx={{ alignSelf: "flex-start", bgcolor: "#fff", color: "primary.dark", "&:hover": { bgcolor: "#fff" } }}
+                    sx={{ alignSelf: "flex-start", bgcolor: txt, color: bg || "#0A5A59", "&:hover": { bgcolor: txt, opacity: .9 } }}
                     endIcon={<ArrowBackRoundedIcon sx={{ transform: lang === "ar" ? "none" : "scaleX(-1)" }} />}
                   >
-                    {t("common.readMore")}
+                    {isAct && s.external
+                      ? (lang === "ar" ? "اضغط هنا لرؤية المزيد" : "Click here for more")
+                      : t("common.readMore")}
                   </Button>
                 </Box>
               </Box>

@@ -55,7 +55,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         fields = [
             "id", "title_ar", "title_en", "description_ar", "description_en",
             "category", "category_display", "date", "end_date",
-            "location_ar", "location_en", "cover_image", "video_url",
+            "location_ar", "location_en", "cover_image", "video_url", "external_url",
             "files", "created_at",
         ]
         read_only_fields = ["created_at"]
@@ -97,10 +97,19 @@ class SmartAnnouncementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SmartAnnouncement
         fields = [
-            "id", "title_ar", "title_en", "link", "is_pinned", "is_active",
+            "id", "title_ar", "title_en", "link",
+            "image", "video_url", "bg_color", "text_color",
+            "placement", "is_pinned", "is_active",
             "starts_at", "expires_at", "is_live", "created_at",
         ]
         read_only_fields = ["created_at"]
+
+    def to_internal_value(self, data):
+        """نماذج FormData ترسل الحقل الفارغ كنص فارغ — نُبقيه فارغاً بدل رفضه."""
+        if hasattr(data, "get") and data.get("image") == "":
+            data = data.copy()
+            data.pop("image")
+        return super().to_internal_value(data)
 
 
 class PatientTopicSerializer(serializers.ModelSerializer):

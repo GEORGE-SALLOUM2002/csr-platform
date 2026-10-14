@@ -83,6 +83,7 @@ class SmartAnnouncementViewSet(viewsets.ModelViewSet):
     """الإعلانات الذكية — الزائر يرى الفعّالة فقط (إزالة تلقائية بعد الانتهاء)."""
     serializer_class = SmartAnnouncementSerializer
     permission_classes = [ReadOnlyOrEditor]
+    parser_classes = _UPLOAD_PARSERS  # لرفع صورة الإعلان
 
     def get_queryset(self):
         qs = SmartAnnouncement.objects.all()

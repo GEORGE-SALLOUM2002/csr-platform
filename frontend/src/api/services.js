@@ -66,8 +66,8 @@ export const ContentAPI = {
   deleteBoard: (id) => client.delete(`/board/${id}/`),
 
   announcements: (params) => client.get("/announcements/", { params }),
-  createAnnouncement: (data) => client.post("/announcements/", data),
-  updateAnnouncement: (id, data) => client.patch(`/announcements/${id}/`, data),
+  createAnnouncement: (data) => client.post("/announcements/", data, form),
+  updateAnnouncement: (id, data) => client.patch(`/announcements/${id}/`, data, form),
   deleteAnnouncement: (id) => client.delete(`/announcements/${id}/`),
 
   patientTopics: (params) => client.get("/patient-topics/", { params }),

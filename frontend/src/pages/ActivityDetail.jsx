@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Container, Box, Typography, Chip, Button, Stack, Divider } from "@mui/material";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
@@ -60,6 +61,20 @@ export default function ActivityDetail() {
       <Typography sx={{ whiteSpace: "pre-line", mb: 4 }}>
         {tr(data, "description", lang) || "—"}
       </Typography>
+
+      {data.external_url && (
+        <Button
+          variant="contained"
+          size="large"
+          endIcon={<OpenInNewRoundedIcon />}
+          href={data.external_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ mb: 3 }}
+        >
+          {lang === "ar" ? "اضغط هنا لرؤية المزيد" : "Click here for more"}
+        </Button>
+      )}
 
       {data.video_url && (
         <Button variant="contained" startIcon={<PlayCircleRoundedIcon />} href={data.video_url} target="_blank" rel="noopener" sx={{ mb: 4 }}>

@@ -19,7 +19,7 @@ import { eventDateLabel } from "../../utils/eventDate";
 const CATS = ["CONFERENCE", "WORKSHOP", "SEMINAR"];
 const EMPTY = {
   title_ar: "", title_en: "", description_ar: "", description_en: "",
-  category: "CONFERENCE", date: "", end_date: "", location_ar: "", location_en: "", video_url: "",
+  category: "CONFERENCE", date: "", end_date: "", location_ar: "", location_en: "", video_url: "", external_url: "",
 };
 
 export default function ManageActivities() {
@@ -54,6 +54,7 @@ export default function ManageActivities() {
       description_ar: a.description_ar || "", description_en: a.description_en || "",
       category: a.category || "CONFERENCE", date: a.date || "", end_date: a.end_date || "",
       location_ar: a.location_ar || "", location_en: a.location_en || "", video_url: a.video_url || "",
+      external_url: a.external_url || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -67,7 +68,7 @@ export default function ManageActivities() {
     setBusy(true);
     try {
       const fd = new FormData();
-      ["title_ar", "title_en", "description_ar", "description_en", "category", "location_ar", "location_en", "video_url"]
+      ["title_ar", "title_en", "description_ar", "description_en", "category", "location_ar", "location_en", "video_url", "external_url"]
         .forEach((k) => fd.append(k, form[k]));
       // تُرسَل حتى لو كانت فارغة ليتمكّن المشرف من مسح التاريخ عند التعديل
       fd.append("date", form.date);
@@ -181,6 +182,16 @@ export default function ManageActivities() {
             <TextField label={ar("الوصف (عربي)", "Description (Arabic)")} value={form.description_ar} onChange={set("description_ar")} multiline minRows={2} />
             <TextField label={ar("الوصف (إنجليزي)", "Description (English)")} value={form.description_en} onChange={set("description_en")} multiline minRows={2} />
             <TextField label={ar("رابط فيديو (اختياري)", "Video URL (optional)")} value={form.video_url} onChange={set("video_url")} />
+            <TextField
+              label={ar("رابط خارجي (اختياري)", "External link (optional)")}
+              value={form.external_url}
+              onChange={set("external_url")}
+              placeholder="https://…"
+              helperText={ar(
+                "عند وضعه يظهر في الصفحة الرئيسية زر «اضغط هنا لرؤية المزيد» يفتح هذا الرابط مباشرةً بدل صفحة التفاصيل.",
+                "When set, the home page shows a button that opens this link directly instead of the details page."
+              )}
+            />
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
               <Button component="label" variant="outlined" startIcon={<UploadFileRoundedIcon />}>

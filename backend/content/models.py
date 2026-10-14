@@ -12,7 +12,12 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
+from django.core.validators import RegexValidator
+
 from config.validators import image_validators, document_validators
+
+# لون بصيغة #RRGGBB (يُستخدم في ألوان الإعلانات الذكية)
+HEX_COLOR = RegexValidator(r"^#[0-9A-Fa-f]{6}$", "اللون يجب أن يكون بصيغة #RRGGBB مثل #0A5A59.")
 
 
 # ============================ الأخبار ============================
@@ -83,6 +88,9 @@ class Activity(models.Model):
         validators=image_validators(5),
     )
     video_url = models.URLField("رابط فيديو", blank=True)
+    # رابط خارجي (تسجيل، برنامج المؤتمر، موقع الجهة المنظّمة...).
+    # عند وجوده يفتحه زر «اضغط هنا لرؤية المزيد» مباشرةً بدل صفحة التفاصيل.
+    external_url = models.URLField("رابط خارجي", max_length=500, blank=True)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
@@ -152,9 +160,37 @@ class BoardMember(models.Model):
 # ============================ الإعلانات الذكية ============================
 class SmartAnnouncement(models.Model):
     """إعلان ذكي: يُثبّت أعلى الموقع ويُزال تلقائياً بعد تاريخ الانتهاء."""
+
+    class Placement(models.TextChoices):
+        BAR = "BAR", "أعلى الصفحة فقط"
+        BOTH = "BOTH", "أعلى الصفحة ومع أحدث الإعلانات والمؤتمرات"
+
     title_ar = models.CharField("النص (عربي)", max_length=250)
     title_en = models.CharField("النص (إنجليزي)", max_length=250, blank=True)
     link = models.CharField("رابط (اختياري)", max_length=300, blank=True)
+
+    # صورة ورابط فيديو يظهران في شريط «أحدث الإعلانات والمؤتمرات» بالصفحة الرئيسية
+    image = models.ImageField(
+        "صورة", upload_to="announcements/", blank=True, null=True,
+        validators=image_validators(5),
+    )
+    video_url = models.URLField("رابط فيديو", max_length=1000, blank=True)
+
+    # ألوان خاصة بهذا الإعلان (اتركها فارغة لاستخدام ألوان الموقع)
+    bg_color = models.CharField(
+        "لون الخلفية", max_length=7, blank=True,
+        validators=[HEX_COLOR], help_text="بصيغة #RRGGBB",
+    )
+    text_color = models.CharField(
+        "لون النص", max_length=7, blank=True,
+        validators=[HEX_COLOR], help_text="بصيغة #RRGGBB",
+    )
+
+    # موضع الإعلان: الشريط أعلى الصفحة وحده، أو الشريط مع شريط «أحدث الإعلانات والمؤتمرات»
+    placement = models.CharField(
+        "موضع الإعلان", max_length=4, choices=Placement.choices, default=Placement.BOTH,
+    )
+
     is_pinned = models.BooleanField("مثبّت أعلى الموقع", default=False)
     is_active = models.BooleanField("مُفعّل", default=True)
     starts_at = models.DateTimeField("يبدأ في", default=timezone.now)

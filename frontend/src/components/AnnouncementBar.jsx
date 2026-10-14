@@ -41,8 +41,9 @@ export default function AnnouncementBar() {
     <Box
       sx={{
         // تدرّج لوني بارز بهوية الموقع + شريط تمييز سفلي ذهبي لجذب النظر
-        background: "linear-gradient(90deg, #0A5A59 0%, #0E7C7B 50%, #1FA98D 100%)",
-        color: "#ffffff",
+        // لون الإعلان إن ضبطه المشرف، وإلا تدرّج ألوان الموقع
+        background: a.bg_color || "linear-gradient(90deg, #0A5A59 0%, #0E7C7B 50%, #1FA98D 100%)",
+        color: a.text_color || "#ffffff",
         borderBottom: "3px solid",
         borderColor: "warning.main",
         boxShadow: "0 3px 10px rgba(6,26,25,.28)",
