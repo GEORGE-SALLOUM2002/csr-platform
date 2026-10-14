@@ -33,6 +33,11 @@ SECRET_KEY = os.getenv("SECRET_KEY", INSECURE_DEFAULT_KEY)
 DEBUG = env_bool("DEBUG", True)
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
+# مسار لوحة تحكم Django. غيّره في .env لإخفائه عن الروبوتات التي تمسح /admin/.
+# أبقِ البادئة admin/ لأن nginx يمرّر هذا المسار وحده إلى الخلفية.
+# مثال: ADMIN_URL=admin/7fk29x/  →  الدخول من https://example.com/admin/7fk29x/
+ADMIN_URL = (os.getenv("ADMIN_URL", "admin/").strip().strip("/") or "admin") + "/"
+
 # حماية إنتاجية: يُمنع تشغيل الإنتاج بمفتاح سري افتراضي أو بدون نطاقات مسموح بها.
 if not DEBUG:
     if SECRET_KEY == INSECURE_DEFAULT_KEY or len(SECRET_KEY) < 32:

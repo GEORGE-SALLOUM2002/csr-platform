@@ -7,6 +7,7 @@
   الملفات الثابتة للواجهة (/assets/ والشعار...) يخدمها WhiteNoise مباشرةً في الإنتاج.
 """
 import posixpath
+import re
 
 from django.contrib import admin
 from django.urls import path, include, re_path
@@ -39,8 +40,11 @@ def spa_index(request, *args, **kwargs):
     )
 
 
+# أول جزء من مسار لوحة الأدمن — يُستثنى من توجيه SPA (admin/ افتراضياً)
+ADMIN_ROOT = settings.ADMIN_URL.split("/")[0]
+
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
     path("api/", include("accounts.urls")),
     path("api/", include("library.urls")),
     path("api/", include("content.urls")),
@@ -48,5 +52,5 @@ urlpatterns = [
     # ملفات المحتوى العلمي (library/) مستثناة: لا تُخدَم إلا عبر /api/resources/<id>/stream/ الموقّع
     re_path(r"^media/(?P<path>.*)$", media_serve),
     # توجيه SPA: أي مسار عدا (api/admin/media/static/assets) يعيد index.html
-    re_path(r"^(?!api/|admin/|media/|static/|assets/).*$", spa_index),
+    re_path(rf"^(?!api/|{re.escape(ADMIN_ROOT)}/|media/|static/|assets/).*$", spa_index),
 ]
