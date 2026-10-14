@@ -43,6 +43,7 @@ import ManageActivities from "./pages/dashboard/ManageActivities";
 import ManageSiteSettings from "./pages/dashboard/ManageSiteSettings";
 import ManageCategories from "./pages/dashboard/ManageCategories";
 import SiteStats from "./pages/dashboard/SiteStats";
+import ContactMessages from "./pages/dashboard/ContactMessages";
 
 const STAFF = ["EDITOR", "ADMIN"];
 const CONTRIB = ["DOCTOR", "EDITOR", "ADMIN"];
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="dashboard/patients" element={<ProtectedRoute roles={STAFF}><ManagePatients /></ProtectedRoute>} />
         <Route path="dashboard/activities" element={<ProtectedRoute roles={STAFF}><ManageActivities /></ProtectedRoute>} />
         <Route path="dashboard/site-settings" element={<ProtectedRoute roles={STAFF}><ManageSiteSettings /></ProtectedRoute>} />
+        <Route path="dashboard/messages" element={<ProtectedRoute roles={STAFF}><ContactMessages /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

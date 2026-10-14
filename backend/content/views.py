@@ -9,6 +9,9 @@ from config.throttles import StatsThrottle
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 
+from django.conf import settings as django_settings
+
+from accounts.emails import send_contact_message_notice
 from accounts.permissions import ReadOnlyOrEditor, ReadOnlyOrAdmin, IsEditorOrAdmin, IsAdmin
 from library.models import Resource
 from .models import (
@@ -122,6 +125,12 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return [permissions.AllowAny()]
         return [IsEditorOrAdmin()]
+
+    def perform_create(self, serializer):
+        """حفظ الرسالة ثم إشعار بريد الجمعية (فشل البريد لا يُفشل الإرسال)."""
+        msg = serializer.save()
+        to = (SiteSettings.load().contact_email or "").strip() or django_settings.DEFAULT_FROM_EMAIL
+        send_contact_message_notice(msg, to)
 
     @action(detail=True, methods=["post"], permission_classes=[IsEditorOrAdmin])
     def mark_read(self, request, pk=None):

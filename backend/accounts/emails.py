@@ -10,6 +10,7 @@ import logging
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.utils.html import escape
 
 logger = logging.getLogger("csr")
 
@@ -41,7 +42,7 @@ def _html_wrap(inner):
 </html>"""
 
 
-def _send(subject, to_email, text_body, html_inner):
+def _send(subject, to_email, text_body, html_inner, reply_to=None):
     """إرسال رسالة (نص + HTML) مع معالجة الأخطاء — لا يرفع استثناءً أبداً."""
     if not to_email:
         return False
@@ -51,6 +52,7 @@ def _send(subject, to_email, text_body, html_inner):
             body=text_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[to_email],
+            reply_to=[reply_to] if reply_to else None,
         )
         msg.attach_alternative(_html_wrap(html_inner), "text/html")
         msg.send(fail_silently=False)
@@ -202,3 +204,32 @@ def send_password_reset(user, reset_url):
         f"ignore this message. The link is valid for a limited time.</p>"
     )
     return _send(subject, user.email, text_body, html_inner)
+
+
+def send_contact_message_notice(msg, to_email):
+    """إشعار إدارة الجمعية برسالة جديدة من نموذج «تواصل معنا».
+
+    يُرسَل إلى بريد الجمعية، ويُضبط «الرد» (Reply-To) على بريد المُرسِل
+    ليُجيب المشرف عليه مباشرةً من بريده.
+    """
+    body = (msg.message or "").strip()
+    subject = f"{settings.SITE_NAME}: رسالة جديدة من {msg.name} / New contact message"
+    text_body = (
+        f"وصلت رسالة جديدة عبر «تواصل معنا»:\n\n"
+        f"الاسم: {msg.name}\n"
+        f"البريد: {msg.email}\n"
+        f"التاريخ: {msg.created_at:%Y-%m-%d %H:%M}\n\n"
+        f"الرسالة:\n{body}\n\n"
+        f"— {settings.SITE_NAME}"
+    )
+    html_inner = (
+        f"<p>وصلت رسالة جديدة عبر <strong>تواصل معنا</strong>:</p>"
+        f"<p><strong>الاسم:</strong> {escape(msg.name)}<br>"
+        f"<strong>البريد:</strong> <span dir='ltr'>{escape(msg.email)}</span><br>"
+        f"<strong>التاريخ:</strong> {msg.created_at:%Y-%m-%d %H:%M}</p>"
+        f"<div style='background:#f2f8f6;border:1px solid #e0eeea;border-radius:10px;"
+        f"padding:14px;white-space:pre-wrap'>{escape(body)}</div>"
+        f"<p style='color:#4e6c68;font-size:13px'>يمكنك الرد على هذه الرسالة مباشرةً "
+        f"ليصل ردّك إلى المُرسِل.</p>"
+    )
+    return _send(subject, to_email, text_body, html_inner, reply_to=msg.email)

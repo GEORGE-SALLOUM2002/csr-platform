@@ -75,6 +75,9 @@ export const ContentAPI = {
   deletePatientTopic: (id) => client.delete(`/patient-topics/${id}/`),
 
   sendContact: (data) => client.post("/contact/", data),
+  contactMessages: (params) => client.get("/contact/", { params }),
+  markContactRead: (id) => client.post(`/contact/${id}/mark_read/`, {}),
+  deleteContactMessage: (id) => client.delete(`/contact/${id}/`),
 
   siteSettings: () => client.get("/site-settings/"),
   updateSiteSettings: (data) => client.patch("/site-settings/", data),

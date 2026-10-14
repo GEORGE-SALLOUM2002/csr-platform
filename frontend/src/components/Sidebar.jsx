@@ -66,6 +66,7 @@ const dashboardLinks = {
     { to: "/dashboard/announcements", labelKey: "dashboard.manageAnnouncements", icon: <CampaignRoundedIcon /> },
     { to: "/dashboard/patients", labelKey: "dashboard.managePatients", icon: <HealthAndSafetyRoundedIcon /> },
     { to: "/dashboard/activities", labelKey: "dashboard.manageActivities", icon: <EventRoundedIcon /> },
+    { to: "/dashboard/messages", labelKey: "dashboard.contactMessages", icon: <MailRoundedIcon /> },
     { to: "/dashboard/site-settings", labelKey: "dashboard.siteSettings", icon: <ShareRoundedIcon /> },
   ],
   ADMIN: [
@@ -79,6 +80,7 @@ const dashboardLinks = {
     { to: "/dashboard/announcements", labelKey: "dashboard.manageAnnouncements", icon: <CampaignRoundedIcon /> },
     { to: "/dashboard/patients", labelKey: "dashboard.managePatients", icon: <HealthAndSafetyRoundedIcon /> },
     { to: "/dashboard/activities", labelKey: "dashboard.manageActivities", icon: <EventRoundedIcon /> },
+    { to: "/dashboard/messages", labelKey: "dashboard.contactMessages", icon: <MailRoundedIcon /> },
     { to: "/dashboard/site-settings", labelKey: "dashboard.siteSettings", icon: <ShareRoundedIcon /> },
   ],
 };
